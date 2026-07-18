@@ -35,3 +35,6 @@ node_modules/
 *.local.*
 .tool-versions
 
+# Ignore isolated git worktrees
+/.worktrees/
+
