@@ -2,8 +2,14 @@
 
 module UltimateTurboModal::Helpers
   module ViewHelper
-    def modal(**, &)
-      render(UltimateTurboModal.new(request:, **), &)
+    def modal(title: nil, **options, &)
+      if native_sheet?
+        render(UltimateTurboModal.configuration.native_sheet_config.wrapper_partial, title: title) do
+          capture(&)
+        end
+      else
+        render(UltimateTurboModal.new(request:, title: title, **options), &)
+      end
     end
 
     def drawer(position: nil, size: nil, **options, &block)
