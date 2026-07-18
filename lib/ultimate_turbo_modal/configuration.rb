@@ -14,7 +14,7 @@ module UltimateTurboModal
     :allowed_click_outside_selector, :allowed_click_outside_selector=, to: :configuration
 
   class Configuration
-    attr_reader :flavor, :modal_config, :drawer_config
+    attr_reader :flavor, :modal_config, :drawer_config, :native_sheet_config
     attr_accessor :allowed_click_outside_selector
 
     def initialize
@@ -22,6 +22,7 @@ module UltimateTurboModal
       @allowed_click_outside_selector = []
       @modal_config = ModalConfig.new
       @drawer_config = DrawerConfig.new
+      @native_sheet_config = NativeSheetConfig.new
     end
 
     def modal
@@ -32,6 +33,11 @@ module UltimateTurboModal
     def drawer
       yield(@drawer_config) if block_given?
       @drawer_config
+    end
+
+    def native_sheet
+      yield(@native_sheet_config) if block_given?
+      @native_sheet_config
     end
 
     def flavor=(flavor)
