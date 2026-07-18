@@ -15,11 +15,12 @@ module UltimateTurboModal
 
   class Configuration
     attr_reader :flavor, :modal_config, :drawer_config, :native_sheet_config
-    attr_accessor :allowed_click_outside_selector
+    attr_accessor :allowed_click_outside_selector, :close_on_submit_success
 
     def initialize
       @flavor = :tailwind
       @allowed_click_outside_selector = []
+      @close_on_submit_success = true
       @modal_config = ModalConfig.new
       @drawer_config = DrawerConfig.new
       @native_sheet_config = NativeSheetConfig.new

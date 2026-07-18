@@ -4,6 +4,7 @@ class UltimateTurboModal::Base < Phlex::HTML
   prepend Phlex::DeferredRenderWithMainContent
 
   attr_accessor :request, :allowed_click_outside_selector, :content_div_data
+  attr_reader :close_on_submit_success
   VALID_DRAWER_SIZES = %i[xs sm md lg xl 2xl full].freeze
   VALID_DRAWER_POSITIONS = %i[right left].freeze
 
@@ -28,6 +29,7 @@ class UltimateTurboModal::Base < Phlex::HTML
     close_button: nil,
     close_button_data_action: "modal#hideModal",
     close_button_sr_label: "Close modal",
+    close_on_submit_success: nil,
     drawer_position: false,
     footer_divider: nil,
     header: nil,
@@ -54,6 +56,7 @@ class UltimateTurboModal::Base < Phlex::HTML
     @advance = !!adv
     @advance_url = (adv.present? && adv.is_a?(String)) ? adv : nil
     @close_button = close_button.nil? ? cfg.close_button : close_button
+    @close_on_submit_success = close_on_submit_success
     @footer_divider = footer_divider.nil? ? cfg.footer_divider : footer_divider
     @header = header.nil? ? cfg.header : header
     @header_divider = header_divider.nil? ? cfg.header_divider : header_divider
@@ -123,6 +126,10 @@ class UltimateTurboModal::Base < Phlex::HTML
       raise ArgumentError,
         "Invalid drawer position: #{value.inspect}. Must be one of #{VALID_DRAWER_POSITIONS.map(&:inspect).join(", ")}"
     end
+  end
+
+  def close_on_submit_success?
+    @close_on_submit_success.nil? ? UltimateTurboModal.configuration.close_on_submit_success : @close_on_submit_success
   end
 
   private
@@ -262,7 +269,8 @@ class UltimateTurboModal::Base < Phlex::HTML
       modal_target: "container",
       modal_advance_url_value: advance_url,
       modal_allowed_click_outside_selector_value: allowed_click_outside_selector,
-      action: "turbo:submit-end->modal#submitEnd cancel->modal#cancelEvent mousedown->modal#dialogMousedown click->modal#dialogClicked",
+      modal_close_on_submit_success_value: close_on_submit_success?,
+      action: "cancel->modal#cancelEvent mousedown->modal#dialogMousedown click->modal#dialogClicked",
       padding: padding?.to_s,
       title: title?.to_s,
       header: header?.to_s,

@@ -24,7 +24,8 @@ export default class extends Controller {
   static targets = ["container", "content"]
   static values = {
     advanceUrl: String,
-    allowedClickOutsideSelector: String
+    allowedClickOutsideSelector: String,
+    closeOnSubmitSuccess: { type: Boolean, default: true }
   }
 
   connect() {
@@ -166,14 +167,14 @@ export default class extends Controller {
   // hide modal on successful form submission
   // action: "turbo:submit-end->modal#submitEnd"
   submitEnd(e) {
-    if (e.detail.success) {
-      const response = e.detail.fetchResponse?.response;
-      if (response?.redirected) {
-        this._pendingRedirectUrl = response.url;
-        return;
-      }
-      this.hideModal();
+    if (!this.closeOnSubmitSuccessValue || !e.detail.success) return;
+
+    const response = e.detail.fetchResponse?.response;
+    if (response?.redirected) {
+      this._pendingRedirectUrl = response.url;
+      return;
     }
+    this.hideModal();
   }
 
   // Intercept native dialog cancel event (ESC key)

@@ -51,4 +51,16 @@ class UltimateTurboModalConfigurationTest < Minitest::Test
     assert_equal false, config.detect.call({})
     assert_equal UltimateTurboModal::NativeActionRenderer, config.action_renderer
   end
+
+  def test_close_on_submit_success_defaults_to_true
+    assert_equal true, UltimateTurboModal.configuration.close_on_submit_success
+  end
+
+  def test_close_on_submit_success_can_be_overridden
+    UltimateTurboModal.configure do |config|
+      config.close_on_submit_success = false
+    end
+
+    assert_equal false, UltimateTurboModal.configuration.close_on_submit_success
+  end
 end
