@@ -1,0 +1,43 @@
+# frozen_string_literal: true
+
+module UltimateTurboModal
+  class NativeActionRenderer
+    def initialize(view)
+      @view = view
+      @output = ActionView::OutputBuffer.new
+    end
+
+    def render
+      @output.to_s.html_safe
+    end
+
+    def cancel(label, _path = nil, **html_attrs)
+      render_bridge_button(label, **html_attrs.merge(bridge: "dismiss"))
+    end
+
+    def submit(label, form:, **html_attrs)
+      render_bridge_button(label, **html_attrs.merge(submit_form: form))
+    end
+
+    def button(label, path:, method: :get, **html_attrs)
+      render_bridge_button(label, **html_attrs.merge(path: path, method: method))
+    end
+
+    private
+
+    def render_bridge_button(label, **data_values)
+      data = {controller: "bridge--button", bridge_button_title_value: label}
+
+      data_values.each do |key, value|
+        next if [:class, :data].include?(key)
+
+        data[:"bridge_button_#{key}_value"] = value.to_s
+      end
+
+      html_attrs = data_values.slice(:class, :data) || {}
+      html_attrs[:data] = (html_attrs[:data] || {}).merge(data)
+
+      @output.safe_concat(@view.tag.div("", **html_attrs, aria: {hidden: "true"}))
+    end
+  end
+end

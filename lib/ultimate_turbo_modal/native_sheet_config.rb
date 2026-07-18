@@ -6,7 +6,7 @@ module UltimateTurboModal
 
     def initialize
       @detect = ->(context) { false }
-      @action_renderer = nil
+      @action_renderer = UltimateTurboModal::NativeActionRenderer
       @wrapper_partial = "ultimate_turbo_modal/native_sheet_wrapper"
       @wrapper_controller = "native-sheet"
       @wrapper_selector = "data-native-sheet-content"
