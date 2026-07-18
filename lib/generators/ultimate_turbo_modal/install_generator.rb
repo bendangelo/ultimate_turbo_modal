@@ -108,6 +108,13 @@ module UltimateTurboModal
         end
       end
 
+      def copy_native_controllers
+        say "\nCopying native Hotwire Native Stimulus controllers...", :green
+        copy_file "native_modal_frame_controller.js", "app/javascript/controllers/native_modal_frame_controller.js"
+        copy_file "native_sheet_controller.js", "app/javascript/controllers/native_sheet_controller.js"
+        say "✅ Copied native modal frame and sheet controllers.\n", :green
+      end
+
       def copy_initializer_and_flavor
         say "\nCreating initializer for `#{@framework}` flavor...", :green
         copy_file "ultimate_turbo_modal.rb", "config/initializers/ultimate_turbo_modal.rb"
