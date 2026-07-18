@@ -3,9 +3,7 @@
 module UltimateTurboModal::Helpers
   module ViewHelper
     def modal(**, &)
-      with_ultimate_turbo_modal_context(:modal) do
-        render(UltimateTurboModal.new(request:, **), &)
-      end
+      render(UltimateTurboModal.new(request:, **), &)
     end
 
     def drawer(position: nil, size: nil, **options, &block)
@@ -17,7 +15,7 @@ module UltimateTurboModal::Helpers
 
     def actions(&block)
       builder = UltimateTurboModal::ActionBuilder.new(self)
-      block.call(builder)
+      capture(builder, &block)
       builder.render
     end
 
@@ -26,25 +24,8 @@ module UltimateTurboModal::Helpers
     end
 
     def inside_modal?
-      !!ultimate_turbo_modal_context
-    end
-
-    private
-
-    def ultimate_turbo_modal_context
-      Thread.current[:ultimate_turbo_modal_context]
-    end
-
-    def ultimate_turbo_modal_context=(value)
-      Thread.current[:ultimate_turbo_modal_context] = value
-    end
-
-    def with_ultimate_turbo_modal_context(value)
-      previous = ultimate_turbo_modal_context
-      self.ultimate_turbo_modal_context = value
-      yield
-    ensure
-      self.ultimate_turbo_modal_context = previous
+      frame = request&.headers&.[]("Turbo-Frame")
+      UltimateTurboModal::Helpers::ControllerHelper::MODAL_FRAME_IDS.include?(frame)
     end
   end
 end

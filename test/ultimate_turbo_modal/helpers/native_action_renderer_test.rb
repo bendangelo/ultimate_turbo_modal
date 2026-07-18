@@ -24,9 +24,9 @@ class UltimateTurboModalNativeActionRendererTest < Minitest::Test
     html = rendered_html
 
     assert_includes html, "data-controller=\"bridge--button\""
-    assert_includes html, "data-bridge-button-title-value=\"Save\""
-    assert_includes html, "data-bridge-button-submit-form-value=\"edit-form\""
-    refute_includes html, "data-bridge-button-path-value"
+    assert_includes html, "data-bridge--button-title-value=\"Save\""
+    assert_includes html, "data-bridge--button-submit-form-value=\"edit-form\""
+    refute_includes html, "data-bridge--button-path-value"
   end
 
   def test_button_renders_bridge_button_with_path_and_method
@@ -34,9 +34,9 @@ class UltimateTurboModalNativeActionRendererTest < Minitest::Test
     html = rendered_html
 
     assert_includes html, "data-controller=\"bridge--button\""
-    assert_includes html, "data-bridge-button-title-value=\"Delete\""
-    assert_includes html, "data-bridge-button-path-value=\"/items/1\""
-    assert_includes html, "data-bridge-button-method-value=\"delete\""
+    assert_includes html, "data-bridge--button-title-value=\"Delete\""
+    assert_includes html, "data-bridge--button-path-value=\"/items/1\""
+    assert_includes html, "data-bridge--button-method-value=\"delete\""
   end
 
   def test_cancel_renders_dismiss_bridge_button
@@ -44,10 +44,10 @@ class UltimateTurboModalNativeActionRendererTest < Minitest::Test
     html = rendered_html
 
     assert_includes html, "data-controller=\"bridge--button\""
-    assert_includes html, "data-bridge-button-title-value=\"Close\""
-    assert_includes html, "data-bridge-button-bridge-value=\"dismiss\""
-    refute_includes html, "data-bridge-button-path-value"
-    refute_includes html, "data-bridge-button-submit-form-value"
+    assert_includes html, "data-bridge--button-title-value=\"Close\""
+    assert_includes html, "data-bridge--button-bridge-value=\"dismiss\""
+    refute_includes html, "data-bridge--button-path-value"
+    refute_includes html, "data-bridge--button-submit-form-value"
   end
 
   def test_renders_multiple_actions

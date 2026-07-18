@@ -26,13 +26,15 @@ module UltimateTurboModal
     private
 
     def render_bridge_button(label, **data_values)
-      data = {controller: "bridge--button", bridge_button_title_value: label}
+      data = {controller: "bridge--button"}
 
       data_values.each do |key, value|
         next if [:class, :data].include?(key)
 
-        data[:"bridge_button_#{key}_value"] = value.to_s
+        data[:"bridge--button-#{key}-value"] = value.to_s
       end
+
+      data[:"bridge--button-title-value"] = label
 
       html_attrs = data_values.slice(:class, :data) || {}
       html_attrs[:data] = (html_attrs[:data] || {}).merge(data)

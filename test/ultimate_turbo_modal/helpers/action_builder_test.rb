@@ -11,7 +11,7 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     include ActionView::Helpers::UrlHelper
     include UltimateTurboModal::Helpers::ViewHelper
 
-    attr_accessor :ultimate_turbo_modal_context
+    attr_accessor :turbo_frame_header
 
     def output_buffer
       @output_buffer ||= ActionView::OutputBuffer.new
@@ -24,15 +24,11 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     end
 
     def native_sheet?
-      ultimate_turbo_modal_context == :native_sheet
-    end
-
-    def inside_modal?
-      ultimate_turbo_modal_context == :modal
+      false
     end
 
     def request
-      @request ||= Struct.new(:headers).new({})
+      @request ||= Struct.new(:headers).new({"Turbo-Frame" => turbo_frame_header})
     end
   end
 
@@ -55,11 +51,13 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "Save"
     assert_includes result, "my-form"
     refute_includes result, "data-controller=\"bridge--button\""
-    refute_includes result, "sticky"
+    refute_includes result, "data-bridge--button"
+    refute_includes result, "bg-blue-600"
+    refute_includes result, "bg-slate-100"
   end
 
   def test_renders_modal_footer_inside_modal
-    @view.ultimate_turbo_modal_context = :modal
+    @view.turbo_frame_header = "modal"
     result = @view.actions do |actions|
       actions.cancel("Cancel", "/cancel")
       actions.submit("Save", form: "my-form")
@@ -67,36 +65,50 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
 
     assert_includes result, "Cancel"
     assert_includes result, "Save"
-    assert_includes result, "sticky"
+    assert_includes result, "justify-end"
+    refute_includes result, "bg-white"
+    refute_includes result, "border-slate-200"
+  end
+
+  def test_renders_modal_footer_inside_drawer_modal
+    @view.turbo_frame_header = "drawer-modal"
+    result = @view.actions do |actions|
+      actions.cancel("Cancel", "/cancel")
+      actions.submit("Save", form: "my-form")
+    end
+
+    assert_includes result, "Cancel"
+    assert_includes result, "Save"
+    assert_includes result, "justify-end"
   end
 
   def test_renders_native_bridge_buttons_in_native_sheet
-    @view.ultimate_turbo_modal_context = :native_sheet
+    @view.define_singleton_method(:native_sheet?) { true }
     result = @view.actions do |actions|
       actions.button("Edit", path: "/edit", method: :get)
       actions.submit("Save", form: "my-form")
     end
 
     assert_includes result, "data-controller=\"bridge--button\""
-    assert_includes result, "data-bridge-button-title-value=\"Edit\""
-    assert_includes result, "data-bridge-button-path-value=\"/edit\""
-    assert_includes result, "data-bridge-button-method-value=\"get\""
-    assert_includes result, "data-bridge-button-submit-form-value=\"my-form\""
+    assert_includes result, "data-bridge--button-title-value=\"Edit\""
+    assert_includes result, "data-bridge--button-path-value=\"/edit\""
+    assert_includes result, "data-bridge--button-method-value=\"get\""
+    assert_includes result, "data-bridge--button-submit-form-value=\"my-form\""
     refute_includes result, "Cancel"
   end
 
   def test_native_cancel_emits_dismiss_bridge
-    @view.ultimate_turbo_modal_context = :native_sheet
+    @view.define_singleton_method(:native_sheet?) { true }
     result = @view.actions do |actions|
       actions.cancel("Close")
     end
 
-    assert_includes result, "data-bridge-button-bridge-value=\"dismiss\""
-    refute_includes result, "data-bridge-button-path-value"
+    assert_includes result, "data-bridge--button-bridge-value=\"dismiss\""
+    refute_includes result, "data-bridge--button-path-value"
   end
 
   def test_modal_cancel_uses_path_and_button_tag
-    @view.ultimate_turbo_modal_context = :modal
+    @view.turbo_frame_header = "modal"
     result = @view.actions do |actions|
       actions.cancel("Cancel", "/cancel")
     end
@@ -106,7 +118,7 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
   end
 
   def test_modal_submit_is_button_tag_with_form_attribute
-    @view.ultimate_turbo_modal_context = :modal
+    @view.turbo_frame_header = "modal"
     result = @view.actions do |actions|
       actions.submit("Save", form: "my-form")
     end
@@ -115,17 +127,22 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "form=\"my-form\""
   end
 
-  def test_action_builder_tracks_modal_context_around_modal_call
-    view = FakeView.new
+  def test_actions_inside_modal_block_resolves_to_modal_footer_renderer
     called = false
-    view.define_singleton_method(:modal) do |**|
-      called = true
-      "rendered"
+    @view.turbo_frame_header = "modal"
+    @view.define_singleton_method(:modal) do |**, &block|
+      actions(&block)
     end
 
-    assert_equal false, view.inside_modal?
+    result = @view.modal do |actions|
+      called = true
+      actions.cancel("Cancel", "/cancel")
+      actions.submit("Save", form: "my-form")
+    end
 
-    view.modal(request: view.request)
-    assert_equal true, called
+    assert called
+    assert_includes result, "Cancel"
+    assert_includes result, "Save"
+    assert_includes result, "justify-end"
   end
 end
