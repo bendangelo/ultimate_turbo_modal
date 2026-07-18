@@ -22,7 +22,11 @@ module UltimateTurboModal
   end
 
   def modal_class
-    "UltimateTurboModal::Flavors::#{flavor.to_s.classify}".constantize
+    if flavor.is_a?(Class)
+      flavor
+    else
+      "UltimateTurboModal::Flavors::#{flavor.to_s.classify}".constantize
+    end
   rescue NameError
     raise Error, "Flavor `#{flavor.downcase}` not found. Please check your initializer file at `config/initializers/ultimate_turbo_modal.rb` and make sure to run `rails generate ultimate_turbo_modal:install`."
   end

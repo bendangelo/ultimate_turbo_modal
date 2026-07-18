@@ -42,8 +42,12 @@ module UltimateTurboModal
     end
 
     def flavor=(flavor)
-      raise ArgumentError, "Value must be a symbol." unless flavor.is_a?(Symbol) || flavor.is_a?(String)
-      @flavor = flavor.to_sym
+      if flavor.is_a?(Class)
+        @flavor = flavor
+      else
+        raise ArgumentError, "Value must be a symbol or string." unless flavor.is_a?(Symbol) || flavor.is_a?(String)
+        @flavor = flavor.to_sym
+      end
     end
 
     # Shared base for modal and drawer configuration
