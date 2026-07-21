@@ -111,6 +111,13 @@ class UltimateTurboModal::Base < Phlex::HTML
     @footer = block
   end
 
+  # Captures an ActionBuilder that was assembled inside the modal/drawer block
+  # so its buttons can be rendered in the #modal-footer slot instead of inline
+  # inside #modal-main.
+  def actions(builder)
+    @actions_builder = builder
+  end
+
   class << self
     def validate_drawer_size!(value)
       return value if VALID_DRAWER_SIZES.include?(value.to_s.to_sym)
@@ -144,7 +151,7 @@ class UltimateTurboModal::Base < Phlex::HTML
 
   def header? = !!@header
 
-  def footer? = @footer.present?
+  def footer? = @footer.present? || @actions_builder.present?
 
   def header_divider? = !!@header_divider && (@title_block.present? || title?)
 
@@ -381,7 +388,11 @@ class UltimateTurboModal::Base < Phlex::HTML
 
   def render_footer
     div(id: scoped_id("modal-footer"), class: classes_for("FOOTER_CLASSES")) do
-      render @footer
+      if @footer.present?
+        render @footer
+      elsif @actions_builder.present?
+        raw_html(@actions_builder.render_footer)
+      end
     end
   end
 

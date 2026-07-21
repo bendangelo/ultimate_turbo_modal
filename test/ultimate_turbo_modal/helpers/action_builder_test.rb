@@ -150,6 +150,22 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "justify-end"
   end
 
+  def test_render_footer_returns_unwrapped_buttons_for_component_slot
+    @view.turbo_frame_header = "modal"
+    builder = UltimateTurboModal::ActionBuilder.new(@view)
+    builder.cancel("Cancel", "/cancel")
+    builder.submit("Save", form: "my-form")
+
+    footer_html = builder.render_footer
+
+    assert_includes footer_html, "Cancel"
+    assert_includes footer_html, "/cancel"
+    assert_includes footer_html, "Save"
+    assert_includes footer_html, "form=\"my-form\""
+    refute_includes footer_html, "justify-end"
+    refute_includes footer_html, "gap-3"
+  end
+
   def test_submit_with_danger_true_uses_danger_default
     @view.turbo_frame_header = "modal"
     result = @view.actions do |actions|

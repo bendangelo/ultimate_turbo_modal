@@ -15,5 +15,9 @@ module UltimateTurboModal
 
       @view.tag.div(content.html_safe, class: FOOTER_CLASSES)
     end
+
+    def render_footer
+      @output.to_s.html_safe
+    end
   end
 end

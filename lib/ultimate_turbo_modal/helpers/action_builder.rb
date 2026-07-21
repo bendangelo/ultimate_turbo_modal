@@ -11,6 +11,12 @@ module UltimateTurboModal
       @renderer.render
     end
 
+    # Render the captured actions without the inline/footer wrapper so the
+    # modal component can place them inside its own #modal-footer slot.
+    def render_footer
+      @renderer.respond_to?(:render_footer) ? @renderer.render_footer : render
+    end
+
     def cancel(label, path = nil, **html_attrs)
       @renderer.cancel(label, path, **html_attrs)
     end

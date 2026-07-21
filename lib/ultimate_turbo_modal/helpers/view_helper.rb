@@ -12,7 +12,12 @@ module UltimateTurboModal::Helpers
           capture(&)
         end
       else
-        render(UltimateTurboModal.new(request:, title: title, **options), &)
+        @ultimate_turbo_modal_component = UltimateTurboModal.new(request:, title: title, **options)
+        begin
+          render(@ultimate_turbo_modal_component, &)
+        ensure
+          @ultimate_turbo_modal_component = nil
+        end
       end
     end
 
@@ -26,7 +31,15 @@ module UltimateTurboModal::Helpers
     def actions(&block)
       builder = UltimateTurboModal::ActionBuilder.new(self)
       capture(builder, &block)
-      builder.render
+
+      if native_sheet?
+        builder.render
+      elsif @ultimate_turbo_modal_component && inside_modal?
+        @ultimate_turbo_modal_component.actions(builder)
+        ""
+      else
+        builder.render
+      end
     end
 
     def native_sheet?
