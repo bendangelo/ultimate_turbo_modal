@@ -2,6 +2,10 @@
 
 module UltimateTurboModal
   class InlineActionRenderer
+    DEFAULT_PRIMARY_CLASSES   = "btn btn-primary"
+    DEFAULT_SECONDARY_CLASSES = "btn btn-secondary"
+    DEFAULT_DANGER_CLASSES    = "btn btn-danger"
+
     def initialize(view)
       @view = view
       @output = ActionView::OutputBuffer.new
@@ -12,6 +16,7 @@ module UltimateTurboModal
     end
 
     def cancel(label, path = nil, **html_attrs)
+      html_attrs[:class] = DEFAULT_SECONDARY_CLASSES if html_attrs[:class].blank?
       if path
         render_link(label, path, **html_attrs)
       else
@@ -19,19 +24,25 @@ module UltimateTurboModal
       end
     end
 
-    def submit(label, form:, **html_attrs)
+    def submit(label, form:, primary: false, danger: false, **html_attrs)
+      if html_attrs[:class].blank?
+        html_attrs[:class] = danger ? DEFAULT_DANGER_CLASSES : DEFAULT_PRIMARY_CLASSES
+      end
       render_button(label, type: "submit", form: form, **html_attrs)
     end
 
-    def button(label, path:, method: :get, **html_attrs)
+    def button(label, path:, method: :get, primary: false, danger: false, **html_attrs)
+      if html_attrs[:class].blank?
+        html_attrs[:class] = DEFAULT_DANGER_CLASSES  if danger
+        html_attrs[:class] = DEFAULT_PRIMARY_CLASSES if primary
+        html_attrs[:class] ||= DEFAULT_SECONDARY_CLASSES
+      end
       if method.to_sym == :get
         render_link(label, path, **html_attrs)
       else
         render_form_button(label, path, method: method, **html_attrs)
       end
     end
-
-    private
 
     def render_link(label, path, **attrs)
       attrs[:data] ||= {}

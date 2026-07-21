@@ -52,8 +52,10 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "my-form"
     refute_includes result, "data-controller=\"bridge--button\""
     refute_includes result, "data-bridge--button"
-    refute_includes result, "bg-blue-600"
-    refute_includes result, "bg-slate-100"
+
+    assert_includes result, "btn btn-secondary"
+    assert_includes result, "btn btn-primary"
+    assert_equal 2, result.scan("btn btn-secondary\"").length
   end
 
   def test_renders_modal_footer_inside_modal
@@ -66,8 +68,9 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "Cancel"
     assert_includes result, "Save"
     assert_includes result, "justify-end"
-    refute_includes result, "bg-white"
-    refute_includes result, "border-slate-200"
+    assert_includes result, "gap-3"
+    assert_includes result, "btn btn-secondary"
+    assert_includes result, "btn btn-primary"
   end
 
   def test_renders_modal_footer_inside_drawer_modal
@@ -80,6 +83,8 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "Cancel"
     assert_includes result, "Save"
     assert_includes result, "justify-end"
+    assert_includes result, "btn btn-secondary"
+    assert_includes result, "btn btn-primary"
   end
 
   def test_renders_native_bridge_buttons_in_native_sheet
@@ -143,5 +148,64 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "Cancel"
     assert_includes result, "Save"
     assert_includes result, "justify-end"
+  end
+
+  def test_submit_with_danger_true_uses_danger_default
+    @view.turbo_frame_header = "modal"
+    result = @view.actions do |actions|
+      actions.submit("Delete", form: "my-form", danger: true)
+    end
+
+    assert_includes result, "btn btn-danger"
+    refute_includes result, "btn btn-primary"
+    refute_includes result, "btn btn-secondary"
+  end
+
+  def test_button_with_primary_true_uses_primary_default
+    @view.turbo_frame_header = "modal"
+    result = @view.actions do |actions|
+      actions.button("Print", path: "/print", method: :get, primary: true)
+    end
+
+    assert_includes result, "btn btn-primary"
+    refute_includes result, "btn btn-secondary"
+  end
+
+  def test_explicit_class_overrides_defaults
+    @view.turbo_frame_header = "modal"
+    result = @view.actions do |actions|
+      actions.submit("Save", form: "my-form", class: "custom-class")
+    end
+
+    assert_includes result, "custom-class"
+    refute_includes result, "btn"
+  end
+
+  def test_danger_takes_precedence_over_primary
+    @view.turbo_frame_header = "modal"
+    result = @view.actions do |actions|
+      actions.submit("Delete", form: "my-form", primary: true, danger: true)
+    end
+
+    assert_includes result, "btn btn-danger"
+    refute_includes result, "btn btn-primary"
+  end
+
+  def test_inline_actions_get_default_classes
+    result = @view.actions do |actions|
+      actions.submit("Save", form: "my-form")
+    end
+
+    assert_includes result, "btn btn-primary"
+  end
+
+  def test_button_with_explicit_class_does_not_apply_default
+    @view.turbo_frame_header = "modal"
+    result = @view.actions do |actions|
+      actions.button("Details", path: "/details", method: :get, class: "my-custom-class")
+    end
+
+    assert_includes result, "my-custom-class"
+    refute_includes result, "btn"
   end
 end

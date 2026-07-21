@@ -2,7 +2,7 @@
 
 module UltimateTurboModal
   class ModalActionRenderer < InlineActionRenderer
-    FOOTER_CLASSES = "flex items-center justify-end gap-2"
+    FOOTER_CLASSES = "flex items-center justify-end gap-3"
 
     def initialize(view)
       super
