@@ -6,8 +6,13 @@ module UltimateTurboModal
 
     def initialize
       @detect = ->(context) {
-        context.respond_to?(:request) &&
-          context.request.headers["X-Turbo-Native-Sheet"].present?
+        if context.respond_to?(:request)
+          headers = context.request.headers
+          return true if headers["X-Turbo-Native-Sheet"].present?
+          ua = headers["User-Agent"].to_s
+          return true if ua.match?(/;\s*Native-Sheet\b/)
+        end
+        false
       }
       @action_renderer = UltimateTurboModal::NativeActionRenderer
       @wrapper_partial = "ultimate_turbo_modal/native_sheet_wrapper"
