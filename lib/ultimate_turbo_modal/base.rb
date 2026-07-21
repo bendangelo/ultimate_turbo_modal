@@ -270,7 +270,7 @@ class UltimateTurboModal::Base < Phlex::HTML
       modal_advance_url_value: advance_url,
       modal_allowed_click_outside_selector_value: allowed_click_outside_selector,
       modal_close_on_submit_success_value: close_on_submit_success?,
-      action: "cancel->modal#cancelEvent mousedown->modal#dialogMousedown click->modal#dialogClicked",
+      action: "cancel->modal#cancelEvent mousedown->modal#dialogMousedown click->modal#dialogClicked turbo:submit-end->modal#submitEnd",
       padding: padding?.to_s,
       title: title?.to_s,
       header: header?.to_s,

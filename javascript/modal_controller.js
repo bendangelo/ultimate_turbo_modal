@@ -168,6 +168,7 @@ export default class extends Controller {
   // action: "turbo:submit-end->modal#submitEnd"
   submitEnd(e) {
     if (!this.closeOnSubmitSuccessValue || !e.detail.success) return;
+    if (e.target.closest('form[data-modal-ignore-submit]')) return;
 
     const response = e.detail.fetchResponse?.response;
     if (response?.redirected) {
