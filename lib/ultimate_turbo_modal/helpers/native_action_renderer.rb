@@ -11,8 +11,8 @@ module UltimateTurboModal
       @output.to_s.html_safe
     end
 
-    def cancel(label, _path = nil, **html_attrs)
-      render_bridge_button(label, **html_attrs.merge(bridge: "dismiss"))
+    def cancel(_label, _path = nil, **html_attrs)
+      nil
     end
 
     def submit(label, form:, **html_attrs)

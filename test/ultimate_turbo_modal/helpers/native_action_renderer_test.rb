@@ -39,24 +39,19 @@ class UltimateTurboModalNativeActionRendererTest < Minitest::Test
     assert_includes html, "data-bridge--button-method-value=\"delete\""
   end
 
-  def test_cancel_renders_dismiss_bridge_button
+  def test_cancel_is_noop
     @renderer.cancel("Close")
     html = rendered_html
 
-    assert_includes html, "data-controller=\"bridge--button\""
-    assert_includes html, "data-bridge--button-title-value=\"Close\""
-    assert_includes html, "data-bridge--button-bridge-value=\"dismiss\""
-    refute_includes html, "data-bridge--button-path-value"
-    refute_includes html, "data-bridge--button-submit-form-value"
+    assert_equal "", html
   end
 
   def test_renders_multiple_actions
     @renderer.submit("Save", form: "form-1")
     @renderer.button("Back", path: "/back", method: :get)
-    @renderer.cancel("Close")
     html = rendered_html
 
-    assert_equal 3, html.scan("data-controller=\"bridge--button\"").length
+    assert_equal 2, html.scan("data-controller=\"bridge--button\"").length
   end
 
   def test_passes_html_attributes_through

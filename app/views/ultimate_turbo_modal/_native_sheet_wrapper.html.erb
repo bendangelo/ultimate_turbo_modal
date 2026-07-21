@@ -1,3 +1,6 @@
-<div data-native-sheet-content data-controller="native-sheet">
+<% extra_controllers = local_assigns[:content_div_data].is_a?(Hash) ? content_div_data[:controller].to_s : "" %>
+<% controller_attr = "native-sheet" %>
+<% controller_attr += " #{extra_controllers}" if extra_controllers.present? %>
+<div data-native-sheet-content data-controller="<%= controller_attr %>">
   <%= yield %>
 </div>

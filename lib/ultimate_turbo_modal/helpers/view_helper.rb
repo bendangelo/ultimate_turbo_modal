@@ -4,7 +4,11 @@ module UltimateTurboModal::Helpers
   module ViewHelper
     def modal(title: nil, **options, &)
       if native_sheet?
-        render(UltimateTurboModal.configuration.native_sheet_config.wrapper_partial, title: title) do
+        wrapper_locals = {
+          title: title,
+          content_div_data: options[:content_div_data]
+        }
+        render(UltimateTurboModal.configuration.native_sheet_config.wrapper_partial, **wrapper_locals) do
           capture(&)
         end
       else
@@ -27,6 +31,20 @@ module UltimateTurboModal::Helpers
 
     def native_sheet?
       UltimateTurboModal.configuration.native_sheet_config.detect.call(self)
+    end
+
+    def inside_native_sheet?
+      native_sheet?
+    end
+
+    def dismiss_button(label = nil, **html_attrs, &block)
+      action = native_sheet? ? "click->native-sheet#dismiss" : "click->modal#hide"
+      html_attrs[:data] = (html_attrs[:data] || {}).merge(action: action)
+      if block
+        tag.button(type: "button", **html_attrs, &block)
+      else
+        tag.button(label, type: "button", **html_attrs)
+      end
     end
 
     def inside_modal?

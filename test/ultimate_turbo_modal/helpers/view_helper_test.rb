@@ -12,6 +12,7 @@ class UltimateTurboModalViewHelperTest < Minitest::Test
   end
 
   class FakeView
+    include ActionView::Helpers::TagHelper
     include UltimateTurboModal::Helpers::ViewHelper
 
     attr_accessor :rendered, :native_sheet_value
@@ -19,6 +20,13 @@ class UltimateTurboModalViewHelperTest < Minitest::Test
     def initialize
       @rendered = []
       @native_sheet_value = false
+      @output_buffer = ActionView::OutputBuffer.new
+    end
+
+    attr_writer :output_buffer
+
+    def output_buffer
+      @output_buffer ||= ActionView::OutputBuffer.new
     end
 
     def render(target = nil, **options, &block)
@@ -98,5 +106,47 @@ class UltimateTurboModalViewHelperTest < Minitest::Test
     assert_equal "Drawer", target.options[:title]
     assert_equal "content", block.call
     assert_equal "rendered:component", result
+  end
+
+  def test_inside_native_sheet_aliases_native_sheet
+    @view.native_sheet_value = false
+    refute @view.inside_native_sheet?
+
+    @view.native_sheet_value = true
+    assert @view.inside_native_sheet?
+  end
+
+  def test_modal_forwards_content_div_data_to_wrapper_in_native_sheet
+    @view.native_sheet_value = true
+    @view.modal(title: "Test", content_div_data: { controller: "custom-ctrl" }) { "content" }
+
+    assert_equal 1, @view.rendered.size
+    _target, options, _block = @view.rendered.first
+    assert_equal "Test", options[:title]
+    assert_equal "custom-ctrl", options.dig(:content_div_data, :controller)
+  end
+
+  def test_dismiss_button_uses_modal_hide_in_browser
+    html = @view.dismiss_button("Close", class: "btn")
+    assert_includes html, 'type="button"'
+    assert_includes html, 'class="btn"'
+    assert_includes html, "Close"
+    assert_includes html, "click-&gt;modal#hide"
+    refute_includes html, "native-sheet"
+  end
+
+  def test_dismiss_button_uses_native_sheet_dismiss_in_sheet
+    @view.native_sheet_value = true
+    html = @view.dismiss_button("Close", class: "btn")
+    assert_includes html, 'type="button"'
+    assert_includes html, "Close"
+    assert_includes html, "click-&gt;native-sheet#dismiss"
+    refute_includes html, "click-&gt;modal#hide"
+  end
+
+  def test_dismiss_button_with_block
+    html = @view.dismiss_button(class: "btn") { "X" }
+    assert_includes html, 'class="btn"'
+    assert_includes html, ">X</button>"
   end
 end

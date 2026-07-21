@@ -1,6 +1,16 @@
-## [Unreleased]
+## [3.3.0] - 2026-07-20
 
-- Drawers now support the `advance` option to push their URL to browser history, matching modals. Defaults to `false`.
+- **First-class Hotwire Native sheet support.** `modal(...)` and `drawer(...)` now automatically detect native-sheet context and render a bare wrapper partial instead of the `<dialog>` overlay.
+- **Default native-sheet detection.** The `native_sheet_config.detect` callback now returns `true` when the `X-Turbo-Native-Sheet` HTTP header is present (standard Hotwire Native sheet signal). Override in config for custom logic.
+- **`inside_native_sheet?` alias** added to both view and controller helpers as an alias for `native_sheet?`.
+- **Native `cancel` is now a no-op.** The Hotwire Native SDK provides its own close button; emitting a Cancel bridge button duplicates it. Use `a.button("Cancel", bridge: "dismiss")` for explicit cancel buttons.
+- **`dismiss_button` helper** emits `data-action="click->modal#hide"` in browser context and `data-action="click->native-sheet#dismiss"` in native-sheet context, so manual close buttons work seamlessly across contexts.
+- **`content_div_data` forwarded to native sheet wrapper.** Stimulus controllers attached via `content_div_data: { controller: "..." }` now work inside native sheets.
+
+## [3.2.1] - 2026-05-07
+
+- Fixed drawers closing abruptly when pressing Escape after dismissing a modal opened from inside the drawer.
+- Fixed `inside_modal?` returning false when navigating between pages inside an open modal or drawer.
 
 ## [3.2.1] - 2026-05-07
 

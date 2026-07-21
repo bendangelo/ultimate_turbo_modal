@@ -97,14 +97,13 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     refute_includes result, "Cancel"
   end
 
-  def test_native_cancel_emits_dismiss_bridge
+  def test_native_cancel_is_noop
     @view.define_singleton_method(:native_sheet?) { true }
     result = @view.actions do |actions|
-      actions.cancel("Close")
+      actions.cancel("Close", "/somewhere")
     end
 
-    assert_includes result, "data-bridge--button-bridge-value=\"dismiss\""
-    refute_includes result, "data-bridge--button-path-value"
+    assert_equal "", result
   end
 
   def test_modal_cancel_uses_path_and_button_tag
