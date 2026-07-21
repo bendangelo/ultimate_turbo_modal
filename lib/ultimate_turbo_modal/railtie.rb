@@ -8,6 +8,12 @@ require "ultimate_turbo_modal/helpers/stream_helper"
 
 module UltimateTurboModal
   class Railtie < Rails::Railtie
+    initializer "ultimate_turbo_modal.setup_view_paths" do |app|
+      root = File.expand_path("../../..", __dir__)
+      path = File.join(root, "app", "views")
+      app.config.paths["app/views"].unshift(path) if File.directory?(path)
+    end
+
     initializer "ultimate_turbo_modal.action_controller" do
       ActiveSupport.on_load(:action_controller_base) do
         include UltimateTurboModal::Helpers::ControllerHelper
