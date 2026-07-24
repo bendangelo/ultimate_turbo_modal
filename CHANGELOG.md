@@ -1,3 +1,8 @@
+## [Unreleased]
+
+- **Pluggable native-sheet action renderer.** `config.native_sheet.action_renderer` now controls which renderer `actions` uses inside native sheets. Defaults to `NativeActionRenderer` for backward compatibility.
+- **New `UltimateTurboModal::NativeHeaderActionRenderer`.** Emits `bridge--header` payloads for apps that use an atomic header bridge component instead of `bridge--button`.
+
 ## [3.3.0] - 2026-07-20
 
 - **First-class Hotwire Native sheet support.** `modal(...)` and `drawer(...)` now automatically detect native-sheet context and render a bare wrapper partial instead of the `<dialog>` overlay.

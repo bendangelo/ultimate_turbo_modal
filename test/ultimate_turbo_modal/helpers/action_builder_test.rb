@@ -224,4 +224,29 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "my-custom-class"
     refute_includes result, "btn"
   end
+
+  def test_uses_configured_native_sheet_action_renderer
+    custom_renderer_class = Class.new do
+      def initialize(view); end
+      def render; "CUSTOM_RENDERER_OUTPUT"; end
+      def cancel(*); end
+      def submit(*); end
+      def button(*); end
+    end
+
+    UltimateTurboModal.configure do |config|
+      config.native_sheet do |native_sheet|
+        native_sheet.action_renderer = custom_renderer_class
+      end
+    end
+
+    @view.define_singleton_method(:native_sheet?) { true }
+    result = @view.actions do |actions|
+      actions.submit("Save", form: "my-form")
+    end
+
+    assert_equal "CUSTOM_RENDERER_OUTPUT", result
+  ensure
+    UltimateTurboModal.reset_configuration!
+  end
 end

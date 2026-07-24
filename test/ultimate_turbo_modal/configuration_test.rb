@@ -52,6 +52,11 @@ class UltimateTurboModalConfigurationTest < Minitest::Test
     assert_equal UltimateTurboModal::NativeActionRenderer, config.action_renderer
   end
 
+  def test_native_header_action_renderer_is_available
+    assert defined?(UltimateTurboModal::NativeHeaderActionRenderer)
+    assert_respond_to UltimateTurboModal::NativeHeaderActionRenderer, :new
+  end
+
   def test_close_on_submit_success_defaults_to_true
     assert_equal true, UltimateTurboModal.configuration.close_on_submit_success
   end

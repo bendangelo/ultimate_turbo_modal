@@ -33,7 +33,7 @@ module UltimateTurboModal
 
     def resolve_renderer
       if @view.respond_to?(:native_sheet?) && @view.native_sheet?
-        NativeActionRenderer.new(@view)
+        UltimateTurboModal.configuration.native_sheet_config.action_renderer.new(@view)
       elsif @view.respond_to?(:inside_modal?) && @view.inside_modal?
         ModalActionRenderer.new(@view)
       else
