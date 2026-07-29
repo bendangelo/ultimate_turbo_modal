@@ -10,9 +10,19 @@ class UltimateTurboModalNativeActionRendererTest < Minitest::Test
     attr_accessor :output_buffer
   end
 
+  class FakeBuilder
+    attr_reader :view, :configuration
+
+    def initialize(view)
+      @view = view
+      @configuration = UltimateTurboModal.configuration
+    end
+  end
+
   def setup
+    UltimateTurboModal.reset_configuration!
     @view = FakeView.new
-    @renderer = UltimateTurboModal::NativeActionRenderer.new(@view)
+    @renderer = UltimateTurboModal::NativeActionRenderer.new(FakeBuilder.new(@view))
   end
 
   def rendered_html

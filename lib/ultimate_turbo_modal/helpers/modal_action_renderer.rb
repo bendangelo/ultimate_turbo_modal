@@ -4,7 +4,7 @@ module UltimateTurboModal
   class ModalActionRenderer < InlineActionRenderer
     FOOTER_CLASSES = "flex items-center justify-end gap-3"
 
-    def initialize(view)
+    def initialize(builder)
       super
       @output = ActionView::OutputBuffer.new
     end

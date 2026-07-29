@@ -11,7 +11,11 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     include ActionView::Helpers::UrlHelper
     include UltimateTurboModal::Helpers::ViewHelper
 
-    attr_accessor :turbo_frame_header
+    attr_accessor :turbo_frame_header, :native_app_mode
+
+    def initialize
+      @native_app_mode = false
+    end
 
     def output_buffer
       @output_buffer ||= ActionView::OutputBuffer.new
@@ -25,6 +29,14 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
 
     def native_sheet?
       false
+    end
+
+    def hotwire_native_app?
+      @native_app_mode
+    end
+
+    def native_full_page?
+      hotwire_native_app? && !native_sheet?
     end
 
     def request
@@ -223,6 +235,68 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
 
     assert_includes result, "my-custom-class"
     refute_includes result, "btn"
+  end
+
+  def test_selects_inline_renderer_for_browser_full_page
+    @view.native_app_mode = false
+    @view.turbo_frame_header = nil
+    builder = UltimateTurboModal::ActionBuilder.new(@view)
+    assert_instance_of UltimateTurboModal::InlineActionRenderer, builder.renderer
+  end
+
+  def test_selects_native_sheet_renderer_for_native_sheet
+    @view.define_singleton_method(:native_sheet?) { true }
+    @view.native_app_mode = true
+    builder = UltimateTurboModal::ActionBuilder.new(@view)
+    assert_instance_of UltimateTurboModal::NativeActionRenderer, builder.renderer
+  end
+
+  def test_selects_inline_renderer_for_native_full_page
+    @view.native_app_mode = true
+    @view.turbo_frame_header = nil
+    builder = UltimateTurboModal::ActionBuilder.new(@view)
+    assert_instance_of UltimateTurboModal::InlineActionRenderer, builder.renderer
+  end
+
+  def test_selects_modal_renderer_inside_modal
+    @view.native_app_mode = false
+    @view.turbo_frame_header = "modal"
+    builder = UltimateTurboModal::ActionBuilder.new(@view)
+    assert_instance_of UltimateTurboModal::ModalActionRenderer, builder.renderer
+  end
+
+  def test_submit_renders_nothing_when_visible_in_excludes_current_context
+    @view.native_app_mode = true
+    @view.turbo_frame_header = nil
+    result = @view.actions do |actions|
+      actions.submit("Save", form: "f", visible_in: [:browser_modal])
+    end
+    assert_equal "", result
+  end
+
+  def test_submit_renders_in_matching_context
+    @view.native_app_mode = true
+    @view.define_singleton_method(:native_sheet?) { true }
+    result = @view.actions do |actions|
+      actions.submit("Save", form: "f", visible_in: [:native_sheet])
+    end
+    refute_equal "", result
+  end
+
+  def test_cancel_renders_nothing_when_visible_in_excludes_context
+    result = @view.actions do |actions|
+      actions.cancel("Cancel", "/cancel", visible_in: [:native_sheet])
+    end
+    assert_equal "", result
+  end
+
+  def test_button_renders_nothing_when_visible_in_excludes_context
+    @view.native_app_mode = true
+    @view.turbo_frame_header = nil
+    result = @view.actions do |actions|
+      actions.button("Delete", path: "/delete", visible_in: [:browser_modal])
+    end
+    assert_equal "", result
   end
 
   def test_uses_configured_native_sheet_action_renderer

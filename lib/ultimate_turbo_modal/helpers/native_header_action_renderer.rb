@@ -5,8 +5,11 @@ module UltimateTurboModal
     DEFAULT_ICON = "check"
     DEFAULT_POSITION = "right"
 
-    def initialize(view)
-      @view = view
+    attr_reader :builder
+
+    def initialize(builder)
+      @builder = builder
+      @view = builder.view
       @output = ActionView::OutputBuffer.new
     end
 
@@ -19,6 +22,7 @@ module UltimateTurboModal
     end
 
     def cancel(_label, _path = nil, **_html_attrs)
+      return "" if @builder.configuration.hide_cancel_in_native_sheets
       nil
     end
 

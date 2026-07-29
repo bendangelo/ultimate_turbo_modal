@@ -2,8 +2,11 @@
 
 module UltimateTurboModal
   class ActionBuilder
+    attr_reader :view, :configuration, :renderer
+
     def initialize(view)
       @view = view
+      @configuration = UltimateTurboModal.configuration
       @renderer = resolve_renderer
     end
 
@@ -17,27 +20,65 @@ module UltimateTurboModal
       @renderer.respond_to?(:render_footer) ? @renderer.render_footer : render
     end
 
-    def cancel(label, path = nil, **html_attrs)
-      @renderer.cancel(label, path, **html_attrs)
+    def cancel(label, path = nil, visible_in: nil, **html_attrs)
+      render_if_visible(visible_in) { @renderer.cancel(label, path, **html_attrs) }
     end
 
-    def submit(label, form:, **html_attrs)
-      @renderer.submit(label, form: form, **html_attrs)
+    def submit(label, form:, visible_in: nil, **html_attrs)
+      render_if_visible(visible_in) { @renderer.submit(label, form: form, **html_attrs) }
     end
 
-    def button(label, path:, method: :get, **html_attrs)
-      @renderer.button(label, path: path, method: method, **html_attrs)
+    def button(label, path:, method: :get, visible_in: nil, **html_attrs)
+      render_if_visible(visible_in) { @renderer.button(label, path: path, method: method, **html_attrs) }
+    end
+
+    def native_sheet?
+      @view.respond_to?(:native_sheet?) && @view.native_sheet?
+    end
+
+    def inside_modal?
+      @view.respond_to?(:inside_modal?) && @view.inside_modal?
+    end
+
+    def native_full_page?
+      hotwire_native_app? && !native_sheet?
+    end
+
+    def hotwire_native_app?
+      @view.respond_to?(:hotwire_native_app?) && @view.hotwire_native_app?
     end
 
     private
 
     def resolve_renderer
-      if @view.respond_to?(:native_sheet?) && @view.native_sheet?
-        UltimateTurboModal.configuration.native_sheet_config.action_renderer.new(@view)
-      elsif @view.respond_to?(:inside_modal?) && @view.inside_modal?
-        ModalActionRenderer.new(@view)
+      if native_full_page?
+        InlineActionRenderer.new(self)
+      elsif native_sheet?
+        @configuration.native_sheet_config.action_renderer.new(self)
+      elsif inside_modal?
+        ModalActionRenderer.new(self)
       else
-        InlineActionRenderer.new(@view)
+        InlineActionRenderer.new(self)
+      end
+    end
+
+    def render_if_visible(visible_in)
+      if visible_in
+        visible_in = Array(visible_in)
+        return "" unless visible_in.include?(current_context)
+      end
+      yield
+    end
+
+    def current_context
+      if native_full_page?
+        :native_full_page
+      elsif native_sheet?
+        :native_sheet
+      elsif inside_modal?
+        :browser_modal
+      else
+        :browser_full_page
       end
     end
   end

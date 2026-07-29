@@ -15,10 +15,20 @@ class UltimateTurboModalNativeHeaderActionRendererTest < Minitest::Test
     end
   end
 
+  class FakeBuilder
+    attr_reader :view, :configuration
+
+    def initialize(view)
+      @view = view
+      @configuration = UltimateTurboModal.configuration
+    end
+  end
+
   def setup
+    UltimateTurboModal.reset_configuration!
     @view = FakeView.new
     @view.title_content = "Edit Customer"
-    @renderer = UltimateTurboModal::NativeHeaderActionRenderer.new(@view)
+    @renderer = UltimateTurboModal::NativeHeaderActionRenderer.new(FakeBuilder.new(@view))
   end
 
   def rendered_html
@@ -82,6 +92,20 @@ class UltimateTurboModalNativeHeaderActionRendererTest < Minitest::Test
     html = rendered_html
 
     assert_equal 2, html.scan("data-controller=\"bridge--header\"").length
+  end
+
+  def test_cancel_renders_nothing_when_hide_cancel_is_true
+    UltimateTurboModal.configure do |config|
+      config.hide_cancel_in_native_sheets = true
+    end
+    renderer = UltimateTurboModal::NativeHeaderActionRenderer.new(FakeBuilder.new(@view))
+    renderer.cancel("Cancel", "/back")
+    assert_equal "", renderer.render.to_s
+  end
+
+  def test_cancel_renders_nothing_by_default
+    @renderer.cancel("Cancel", "/back")
+    assert_equal "", rendered_html
   end
 
   private
