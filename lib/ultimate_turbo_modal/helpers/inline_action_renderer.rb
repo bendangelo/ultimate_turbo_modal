@@ -20,7 +20,7 @@ module UltimateTurboModal
 
     def cancel(label, path = nil, **html_attrs)
       return "" if hide_inline?
-      html_attrs[:class] = DEFAULT_SECONDARY_CLASSES if html_attrs[:class].blank?
+      html_attrs[:class] = css_class_for(:secondary) if html_attrs[:class].blank?
       if path
         render_link(label, path, **html_attrs)
       else
@@ -28,10 +28,17 @@ module UltimateTurboModal
       end
     end
 
-    def submit(label, form:, primary: false, danger: false, **html_attrs)
+    def submit(label, form:, primary: false, secondary: false, danger: false, **html_attrs)
       return "" if hide_inline?
       if html_attrs[:class].blank?
-        html_attrs[:class] = danger ? DEFAULT_DANGER_CLASSES : DEFAULT_PRIMARY_CLASSES
+        html_attrs[:class] =
+          if danger
+            css_class_for(:danger)
+          elsif secondary
+            css_class_for(:secondary)
+          else
+            css_class_for(:primary)
+          end
       end
       render_button(label, type: "submit", form: form, **html_attrs)
     end
@@ -39,9 +46,9 @@ module UltimateTurboModal
     def button(label, path:, method: :get, primary: false, danger: false, **html_attrs)
       return "" if hide_inline?
       if html_attrs[:class].blank?
-        html_attrs[:class] = DEFAULT_DANGER_CLASSES  if danger
-        html_attrs[:class] = DEFAULT_PRIMARY_CLASSES if primary
-        html_attrs[:class] ||= DEFAULT_SECONDARY_CLASSES
+        html_attrs[:class] = css_class_for(:danger)  if danger
+        html_attrs[:class] = css_class_for(:primary) if primary
+        html_attrs[:class] ||= css_class_for(:secondary)
       end
       if method.to_sym == :get
         render_link(label, path, **html_attrs)
@@ -55,6 +62,16 @@ module UltimateTurboModal
     def hide_inline?
       return false unless @builder.configuration.hide_inline_actions_in_native_full_page
       @builder.native_full_page?
+    end
+
+    def css_class_for(role)
+      cfg = @builder.configuration
+      case role
+      when :primary   then cfg.primary_action_classes   || DEFAULT_PRIMARY_CLASSES
+      when :secondary then cfg.secondary_action_classes || DEFAULT_SECONDARY_CLASSES
+      when :danger    then cfg.danger_action_classes    || DEFAULT_DANGER_CLASSES
+      else DEFAULT_PRIMARY_CLASSES
+      end
     end
 
     def render_link(label, path, **attrs)

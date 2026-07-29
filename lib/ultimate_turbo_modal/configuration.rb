@@ -17,7 +17,8 @@ module UltimateTurboModal
     attr_reader :flavor, :modal_config, :drawer_config, :native_sheet_config
     attr_accessor :allowed_click_outside_selector, :close_on_submit_success,
       :hide_cancel_in_native_sheets, :hide_inline_actions_in_native_full_page,
-      :native_app_detect
+      :native_app_detect, :primary_action_classes, :secondary_action_classes,
+      :danger_action_classes
 
     def initialize
       @flavor = :tailwind
@@ -25,6 +26,9 @@ module UltimateTurboModal
       @close_on_submit_success = true
       @hide_cancel_in_native_sheets = false
       @hide_inline_actions_in_native_full_page = false
+      @primary_action_classes = nil
+      @secondary_action_classes = nil
+      @danger_action_classes = nil
       @modal_config = ModalConfig.new
       @drawer_config = DrawerConfig.new
       @native_sheet_config = NativeSheetConfig.new
