@@ -38,7 +38,7 @@ module UltimateTurboModal::Helpers
         @ultimate_turbo_modal_component.actions(builder)
         ""
       else
-        fail "<%= actions %> must be used inside a modal, drawer, or native sheet"
+        builder.render_footer
       end
     end
 

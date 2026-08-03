@@ -22,16 +22,11 @@ module UltimateTurboModal::Helpers
       UltimateTurboModal.configuration.native_app_detect.call(self)
     end
 
-    def native_full_page?
-      hotwire_native_app? && !native_sheet?
-    end
-
     included do
       helper_method :inside_modal?
       helper_method :native_sheet?
       helper_method :inside_native_sheet?
       helper_method :hotwire_native_app?
-      helper_method :native_full_page?
     end
   end
 end

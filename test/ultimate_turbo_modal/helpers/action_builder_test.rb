@@ -368,14 +368,14 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "btn btn-primary"
   end
 
-  def test_actions_outside_modal_or_sheet_raises
+  def test_actions_outside_modal_or_sheet_renders_inline
     @view.reset_modal_component!
-    error = assert_raises(RuntimeError) do
-      @view.actions do |actions|
-        actions.button("New", path: "/new")
-      end
+    result = @view.actions do |actions|
+      actions.button("New", path: "/new")
     end
 
-    assert_includes error.message, "must be used inside a modal, drawer, or native sheet"
+    assert_includes result, "New"
+    assert_includes result, "/new"
+    assert_includes result, "btn btn-secondary"
   end
 end

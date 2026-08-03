@@ -19,7 +19,6 @@ module UltimateTurboModal
     end
 
     def cancel(label, path = nil, **html_attrs)
-      return "" if hide_inline?
       html_attrs[:class] = css_class_for(:secondary) if html_attrs[:class].blank?
       if path
         render_link(label, path, **html_attrs)
@@ -29,7 +28,6 @@ module UltimateTurboModal
     end
 
     def submit(label, form:, primary: false, secondary: false, danger: false, **html_attrs)
-      return "" if hide_inline?
       if html_attrs[:class].blank?
         html_attrs[:class] =
           if danger
@@ -44,7 +42,6 @@ module UltimateTurboModal
     end
 
     def button(label, path:, method: :get, primary: false, danger: false, **html_attrs)
-      return "" if hide_inline?
       if html_attrs[:class].blank?
         html_attrs[:class] = css_class_for(:danger)  if danger
         html_attrs[:class] = css_class_for(:primary) if primary
@@ -58,11 +55,6 @@ module UltimateTurboModal
     end
 
     private
-
-    def hide_inline?
-      return false unless @builder.configuration.hide_inline_actions_in_native_full_page
-      @builder.native_full_page?
-    end
 
     def css_class_for(role)
       cfg = @builder.configuration
