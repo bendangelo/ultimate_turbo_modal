@@ -195,38 +195,59 @@ Link to it the same way as a modal:
 
 ### Native sheet action renderer
 
-By default, `actions` inside a native sheet renders `bridge--button` elements
-using `UltimateTurboModal::NativeActionRenderer`. If your native app uses an
-atomic `bridge--header` component (one payload for the title, primary action
-and overflow menu), you can switch the renderer:
+By default, `actions` inside a native sheet renders `bridge--primary-action` and
+`bridge--overflow-menu` bridge components using
+`UltimateTurboModal::NativeSplitActionRenderer`. This is the recommended renderer
+for Hotwire Native apps.
+
+The primary action is emitted as a `bridge--primary-action` element:
+
+```html
+<div data-controller="bridge--primary-action"
+     data-bridge--primary-action-payload-value='{"key":"primary","label":"Save","icon":"check","submit_form":"edit-form"}'
+     aria-hidden="true">
+</div>
+```
+
+Overflow items are collected into a single `bridge--overflow-menu` element:
+
+```html
+<div data-controller="bridge--overflow-menu"
+     data-bridge--overflow-menu-payload-value='{"icon":"dots-three-vertical","items":[{"key":"delete","label":"Delete","method":"delete","destructive":true}]}'
+     aria-hidden="true">
+</div>
+```
+
+Usage in views:
+
+```erb
+<%= actions do |a| %>
+  <% a.cancel "Cancel" %>
+  <% a.submit "Save", form: "edit-form", primary: true %>
+  <% a.submit "Save & Add Another", form: "edit-form", overflow: true %>
+  <% a.button "Delete", path: item_path, method: :delete, overflow: true, danger: true %>
+  <% a.overflow_menu(extra_actions, icon: "dots-three-vertical") %>
+<% end %>
+```
+
+- `primary: true` — renders a `bridge--primary-action` (one per view)
+- `overflow: true` — adds the action to the `bridge--overflow-menu`
+- `overflow_menu(items, icon:)` — adds explicit items to the overflow menu
+- `cancel` is a no-op in native context (the SDK's close button handles dismiss)
+
+If your native app uses per-button `bridge--button` elements instead, you can
+switch to the legacy renderer:
 
 ```ruby
 UltimateTurboModal.configure do |config|
   config.native_sheet do |native_sheet|
-    native_sheet.action_renderer = UltimateTurboModal::NativeHeaderActionRenderer
+    native_sheet.action_renderer = UltimateTurboModal::NativeActionRenderer
   end
 end
 ```
 
-This emits a `bridge--header` payload for each action. The sheet title is read
-from `content_for(:title)`. The payload shape is:
-
-```json
-{
-  "title": "Edit Customer",
-  "primary_action": {
-    "key": "primary",
-    "label": "Save Changes",
-    "icon": "check",
-    "position": "right",
-    "submit_form": "edit-customer-form"
-  },
-  "overflow_items": []
-}
-```
-
 You can also provide your own renderer class; it must implement
-`initialize(view)`, `render`, `cancel`, `submit`, and `button`.
+`initialize(builder)`, `render`, `cancel`, `submit`, and `button`.
 
 ### Drawer Size Reference
 

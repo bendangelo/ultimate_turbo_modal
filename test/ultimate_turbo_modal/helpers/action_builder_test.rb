@@ -99,18 +99,19 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "btn btn-primary"
   end
 
-  def test_renders_native_bridge_buttons_in_native_sheet
+  def test_renders_native_split_actions_in_native_sheet
     @view.define_singleton_method(:native_sheet?) { true }
     result = @view.actions do |actions|
-      actions.button("Edit", path: "/edit", method: :get)
-      actions.submit("Save", form: "my-form")
+      actions.button("Edit", path: "/edit", method: :get, primary: true)
+      actions.submit("Save", form: "my-form", primary: true)
     end
 
-    assert_includes result, "data-controller=\"bridge--button\""
-    assert_includes result, "data-bridge--button-title-value=\"Edit\""
-    assert_includes result, "data-bridge--button-path-value=\"/edit\""
-    assert_includes result, "data-bridge--button-method-value=\"get\""
-    assert_includes result, "data-bridge--button-submit-form-value=\"my-form\""
+    assert_includes result, "data-controller=\"bridge--primary-action\""
+    assert_includes result, "data-bridge--primary-action-payload-value"
+    assert_includes result, "Edit"
+    assert_includes result, "/edit"
+    assert_includes result, "Save"
+    assert_includes result, "my-form"
     refute_includes result, "Cancel"
   end
 
@@ -248,7 +249,7 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     @view.define_singleton_method(:native_sheet?) { true }
     @view.native_app_mode = true
     builder = UltimateTurboModal::ActionBuilder.new(@view)
-    assert_instance_of UltimateTurboModal::NativeActionRenderer, builder.renderer
+    assert_instance_of UltimateTurboModal::NativeSplitActionRenderer, builder.renderer
   end
 
   def test_selects_inline_renderer_for_native_full_page
@@ -278,7 +279,7 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     @view.native_app_mode = true
     @view.define_singleton_method(:native_sheet?) { true }
     result = @view.actions do |actions|
-      actions.submit("Save", form: "f", visible_in: [:native_sheet])
+      actions.submit("Save", form: "f", primary: true, visible_in: [:native_sheet])
     end
     refute_equal "", result
   end
@@ -322,5 +323,103 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_equal "CUSTOM_RENDERER_OUTPUT", result
   ensure
     UltimateTurboModal.reset_configuration!
+  end
+
+  def test_submit_with_primary_true_in_native_sheet_uses_split_renderer
+    UltimateTurboModal.configure do |config|
+      config.native_sheet do |ns|
+        ns.action_renderer = UltimateTurboModal::NativeSplitActionRenderer
+      end
+    end
+
+    @view.define_singleton_method(:native_sheet?) { true }
+    result = @view.actions do |actions|
+      actions.submit("Save", form: "my-form", primary: true)
+    end
+
+    assert_includes result, "data-controller=\"bridge--primary-action\""
+    payload = result.match(/data-bridge--primary-action-payload-value="([^"]+)"/)
+    assert payload, "Expected bridge--primary-action payload"
+    parsed = JSON.parse(payload[1].gsub("&quot;", '"').gsub("&amp;", "&"))
+    assert_equal "Save", parsed["label"]
+    assert_equal "my-form", parsed["submit_form"]
+  ensure
+    UltimateTurboModal.reset_configuration!
+  end
+
+  def test_submit_with_overflow_true_in_native_sheet_emits_overflow_menu
+    UltimateTurboModal.configure do |config|
+      config.native_sheet do |ns|
+        ns.action_renderer = UltimateTurboModal::NativeSplitActionRenderer
+      end
+    end
+
+    @view.define_singleton_method(:native_sheet?) { true }
+    result = @view.actions do |actions|
+      actions.submit("Delete", form: "delete-form", overflow: true)
+    end
+
+    assert_includes result, "data-controller=\"bridge--overflow-menu\""
+    payload = result.match(/data-bridge--overflow-menu-payload-value="([^"]+)"/)
+    assert payload, "Expected bridge--overflow-menu payload"
+    parsed = JSON.parse(payload[1].gsub("&quot;", '"').gsub("&amp;", "&"))
+    assert_equal 1, parsed["items"].length
+    assert_equal "Delete", parsed["items"][0]["label"]
+  ensure
+    UltimateTurboModal.reset_configuration!
+  end
+
+  def test_overflow_menu_is_ignored_by_inline_renderer
+    result = @view.actions do |actions|
+      actions.overflow_menu([{label: "Delete", path: "/delete"}])
+    end
+
+    assert_equal "", result
+  end
+
+  def test_overflow_menu_is_ignored_by_modal_renderer
+    @view.turbo_frame_header = "modal"
+    result = @view.actions do |actions|
+      actions.overflow_menu([{label: "Delete", path: "/delete"}])
+    end
+
+    assert_equal "", result
+  end
+
+  def test_overflow_menu_works_with_native_split_renderer
+    UltimateTurboModal.configure do |config|
+      config.native_sheet do |ns|
+        ns.action_renderer = UltimateTurboModal::NativeSplitActionRenderer
+      end
+    end
+
+    @view.define_singleton_method(:native_sheet?) { true }
+    result = @view.actions do |actions|
+      actions.overflow_menu([
+        {label: "Edit", path: "/edit"},
+        {label: "Delete", path: "/delete", destructive: true}
+      ], icon: "dots-three-vertical")
+    end
+
+    assert_includes result, "data-controller=\"bridge--overflow-menu\""
+    payload = result.match(/data-bridge--overflow-menu-payload-value="([^"]+)"/)
+    assert payload, "Expected bridge--overflow-menu payload"
+    parsed = JSON.parse(payload[1].gsub("&quot;", '"').gsub("&amp;", "&"))
+    assert_equal "dots-three-vertical", parsed["icon"]
+    assert_equal 2, parsed["items"].length
+    assert_equal "Edit", parsed["items"][0]["label"]
+    assert_equal "Delete", parsed["items"][1]["label"]
+    assert parsed["items"][1]["destructive"]
+  ensure
+    UltimateTurboModal.reset_configuration!
+  end
+
+  def test_submit_form_is_optional
+    result = @view.actions do |actions|
+      actions.submit("Save")
+    end
+
+    assert_includes result, "Save"
+    assert_includes result, "btn btn-primary"
   end
 end

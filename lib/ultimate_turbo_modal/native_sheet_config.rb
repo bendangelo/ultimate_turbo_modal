@@ -14,7 +14,7 @@ module UltimateTurboModal
         end
         false
       }
-      @action_renderer = UltimateTurboModal::NativeActionRenderer
+      @action_renderer = UltimateTurboModal::NativeSplitActionRenderer
       @wrapper_partial = "ultimate_turbo_modal/native_sheet_wrapper"
       @wrapper_controller = "native-sheet"
       @wrapper_selector = "data-native-sheet-content"

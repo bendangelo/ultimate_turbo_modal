@@ -17,7 +17,7 @@ class UltimateTurboModalConfigurationTest < Minitest::Test
     assert_respond_to config, :wrapper_selector
 
     assert_equal false, config.detect.call({})
-    assert_equal UltimateTurboModal::NativeActionRenderer, config.action_renderer
+    assert_equal UltimateTurboModal::NativeSplitActionRenderer, config.action_renderer
     assert_equal "ultimate_turbo_modal/native_sheet_wrapper", config.wrapper_partial
     assert_equal "native-sheet", config.wrapper_controller
     assert_equal "data-native-sheet-content", config.wrapper_selector
@@ -49,12 +49,7 @@ class UltimateTurboModalConfigurationTest < Minitest::Test
     config = UltimateTurboModal.configuration.native_sheet_config
 
     assert_equal false, config.detect.call({})
-    assert_equal UltimateTurboModal::NativeActionRenderer, config.action_renderer
-  end
-
-  def test_native_header_action_renderer_is_available
-    assert defined?(UltimateTurboModal::NativeHeaderActionRenderer)
-    assert_respond_to UltimateTurboModal::NativeHeaderActionRenderer, :new
+    assert_equal UltimateTurboModal::NativeSplitActionRenderer, config.action_renderer
   end
 
   def test_close_on_submit_success_defaults_to_true

@@ -24,12 +24,17 @@ module UltimateTurboModal
       render_if_visible(visible_in) { @renderer.cancel(label, path, **html_attrs) }
     end
 
-    def submit(label, form:, visible_in: nil, **html_attrs)
-      render_if_visible(visible_in) { @renderer.submit(label, form: form, **html_attrs) }
+    def submit(label, form: nil, primary: false, overflow: false, visible_in: nil, **html_attrs)
+      form ||= @view.try(:single_form_id)
+      render_if_visible(visible_in) { @renderer.submit(label, form: form, primary: primary, overflow: overflow, **html_attrs) }
     end
 
-    def button(label, path:, method: :get, visible_in: nil, **html_attrs)
-      render_if_visible(visible_in) { @renderer.button(label, path: path, method: method, **html_attrs) }
+    def button(label, path:, method: :get, primary: false, overflow: false, visible_in: nil, **html_attrs)
+      render_if_visible(visible_in) { @renderer.button(label, path: path, method: method, primary: primary, overflow: overflow, **html_attrs) }
+    end
+
+    def overflow_menu(items, icon: nil)
+      @renderer.overflow_menu(items, icon: icon) if @renderer.respond_to?(:overflow_menu)
     end
 
     def native_sheet?
