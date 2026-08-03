@@ -56,9 +56,7 @@ module UltimateTurboModal
     private
 
     def resolve_renderer
-      if native_full_page?
-        InlineActionRenderer.new(self)
-      elsif native_sheet?
+      if native_sheet? || native_full_page?
         @configuration.native_sheet_config.action_renderer.new(self)
       elsif inside_modal?
         ModalActionRenderer.new(self)

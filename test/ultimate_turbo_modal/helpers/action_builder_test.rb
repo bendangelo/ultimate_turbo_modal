@@ -252,11 +252,11 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_instance_of UltimateTurboModal::NativeSplitActionRenderer, builder.renderer
   end
 
-  def test_selects_inline_renderer_for_native_full_page
+  def test_selects_split_renderer_for_native_full_page
     @view.native_app_mode = true
     @view.turbo_frame_header = nil
     builder = UltimateTurboModal::ActionBuilder.new(@view)
-    assert_instance_of UltimateTurboModal::InlineActionRenderer, builder.renderer
+    assert_instance_of UltimateTurboModal::NativeSplitActionRenderer, builder.renderer
   end
 
   def test_selects_modal_renderer_inside_modal
