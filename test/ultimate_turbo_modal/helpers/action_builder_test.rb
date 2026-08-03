@@ -11,11 +11,7 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     include ActionView::Helpers::UrlHelper
     include UltimateTurboModal::Helpers::ViewHelper
 
-    attr_accessor :turbo_frame_header, :native_app_mode
-
-    def initialize
-      @native_app_mode = false
-    end
+    attr_accessor :turbo_frame_header
 
     def output_buffer
       @output_buffer ||= ActionView::OutputBuffer.new
@@ -31,70 +27,68 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
       false
     end
 
-    def hotwire_native_app?
-      @native_app_mode
-    end
-
-    def native_full_page?
-      hotwire_native_app? && !native_sheet?
-    end
-
     def request
       @request ||= Struct.new(:headers).new({"Turbo-Frame" => turbo_frame_header})
+    end
+
+    # Stub a modal component so `actions` can pass the builder to it
+    def stub_modal_component!
+      @ultimate_turbo_modal_component = StubModalComponent.new
+    end
+
+    def reset_modal_component!
+      @ultimate_turbo_modal_component = nil
+    end
+
+    def render_captured_footer
+      @ultimate_turbo_modal_component&.render_captured_footer || ""
+    end
+  end
+
+  class StubModalComponent
+    attr_reader :captured_builder
+
+    def actions(builder)
+      @captured_builder = builder
+    end
+
+    def render_captured_footer
+      @captured_builder&.render_footer || ""
     end
   end
 
   def setup
     UltimateTurboModal.reset_configuration!
     @view = FakeView.new
-  end
-
-  def test_renders_inline_actions_by_default
-    result = @view.actions do |actions|
-      actions.cancel("Cancel", "/cancel")
-      actions.button("Details", path: "/details", method: :get)
-      actions.submit("Save", form: "my-form")
-    end
-
-    assert_includes result, "Cancel"
-    assert_includes result, "/cancel"
-    assert_includes result, "Details"
-    assert_includes result, "/details"
-    assert_includes result, "Save"
-    assert_includes result, "my-form"
-    refute_includes result, "data-controller=\"bridge--button\""
-    refute_includes result, "data-bridge--button"
-
-    assert_includes result, "btn btn-secondary"
-    assert_includes result, "btn btn-primary"
-    assert_equal 2, result.scan("btn btn-secondary\"").length
+    @view.stub_modal_component!
   end
 
   def test_renders_modal_footer_inside_modal
     @view.turbo_frame_header = "modal"
-    result = @view.actions do |actions|
+    @view.actions do |actions|
       actions.cancel("Cancel", "/cancel")
       actions.submit("Save", form: "my-form")
     end
 
+    result = @view.render_captured_footer
     assert_includes result, "Cancel"
     assert_includes result, "Save"
-    assert_includes result, "justify-end"
-    assert_includes result, "gap-3"
+    refute_includes result, "justify-end"
+    refute_includes result, "gap-3"
     assert_includes result, "btn btn-secondary"
     assert_includes result, "btn btn-primary"
   end
 
   def test_renders_modal_footer_inside_drawer_modal
     @view.turbo_frame_header = "drawer-modal"
-    result = @view.actions do |actions|
+    @view.actions do |actions|
       actions.cancel("Cancel", "/cancel")
       actions.submit("Save", form: "my-form")
     end
 
+    result = @view.render_captured_footer
     assert_includes result, "Cancel"
     assert_includes result, "Save"
-    assert_includes result, "justify-end"
     assert_includes result, "btn btn-secondary"
     assert_includes result, "btn btn-primary"
   end
@@ -126,20 +120,22 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
 
   def test_modal_cancel_uses_path_and_button_tag
     @view.turbo_frame_header = "modal"
-    result = @view.actions do |actions|
+    @view.actions do |actions|
       actions.cancel("Cancel", "/cancel")
     end
 
+    result = @view.render_captured_footer
     assert_includes result, "<a"
     assert_includes result, "/cancel"
   end
 
   def test_modal_submit_is_button_tag_with_form_attribute
     @view.turbo_frame_header = "modal"
-    result = @view.actions do |actions|
+    @view.actions do |actions|
       actions.submit("Save", form: "my-form")
     end
 
+    result = @view.render_captured_footer
     assert_includes result, "<button"
     assert_includes result, "form=\"my-form\""
   end
@@ -151,16 +147,16 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
       actions(&block)
     end
 
-    result = @view.modal do |actions|
+    @view.modal do |actions|
       called = true
       actions.cancel("Cancel", "/cancel")
       actions.submit("Save", form: "my-form")
     end
 
+    result = @view.render_captured_footer
     assert called
     assert_includes result, "Cancel"
     assert_includes result, "Save"
-    assert_includes result, "justify-end"
   end
 
   def test_render_footer_returns_unwrapped_buttons_for_component_slot
@@ -181,10 +177,11 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
 
   def test_submit_with_danger_true_uses_danger_default
     @view.turbo_frame_header = "modal"
-    result = @view.actions do |actions|
+    @view.actions do |actions|
       actions.submit("Delete", form: "my-form", danger: true)
     end
 
+    result = @view.render_captured_footer
     assert_includes result, "btn btn-danger"
     refute_includes result, "btn btn-primary"
     refute_includes result, "btn btn-secondary"
@@ -192,112 +189,64 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
 
   def test_button_with_primary_true_uses_primary_default
     @view.turbo_frame_header = "modal"
-    result = @view.actions do |actions|
+    @view.actions do |actions|
       actions.button("Print", path: "/print", method: :get, primary: true)
     end
 
+    result = @view.render_captured_footer
     assert_includes result, "btn btn-primary"
     refute_includes result, "btn btn-secondary"
   end
 
   def test_explicit_class_overrides_defaults
     @view.turbo_frame_header = "modal"
-    result = @view.actions do |actions|
+    @view.actions do |actions|
       actions.submit("Save", form: "my-form", class: "custom-class")
     end
 
+    result = @view.render_captured_footer
     assert_includes result, "custom-class"
     refute_includes result, "btn"
   end
 
   def test_danger_takes_precedence_over_primary
     @view.turbo_frame_header = "modal"
-    result = @view.actions do |actions|
+    @view.actions do |actions|
       actions.submit("Delete", form: "my-form", primary: true, danger: true)
     end
 
+    result = @view.render_captured_footer
     assert_includes result, "btn btn-danger"
     refute_includes result, "btn btn-primary"
   end
 
-  def test_inline_actions_get_default_classes
-    result = @view.actions do |actions|
-      actions.submit("Save", form: "my-form")
-    end
-
-    assert_includes result, "btn btn-primary"
-  end
-
   def test_button_with_explicit_class_does_not_apply_default
     @view.turbo_frame_header = "modal"
-    result = @view.actions do |actions|
+    @view.actions do |actions|
       actions.button("Details", path: "/details", method: :get, class: "my-custom-class")
     end
 
+    result = @view.render_captured_footer
     assert_includes result, "my-custom-class"
     refute_includes result, "btn"
   end
 
-  def test_selects_inline_renderer_for_browser_full_page
-    @view.native_app_mode = false
-    @view.turbo_frame_header = nil
-    builder = UltimateTurboModal::ActionBuilder.new(@view)
-    assert_instance_of UltimateTurboModal::InlineActionRenderer, builder.renderer
-  end
-
   def test_selects_native_sheet_renderer_for_native_sheet
     @view.define_singleton_method(:native_sheet?) { true }
-    @view.native_app_mode = true
-    builder = UltimateTurboModal::ActionBuilder.new(@view)
-    assert_instance_of UltimateTurboModal::NativeSplitActionRenderer, builder.renderer
-  end
-
-  def test_selects_split_renderer_for_native_full_page
-    @view.native_app_mode = true
-    @view.turbo_frame_header = nil
     builder = UltimateTurboModal::ActionBuilder.new(@view)
     assert_instance_of UltimateTurboModal::NativeSplitActionRenderer, builder.renderer
   end
 
   def test_selects_modal_renderer_inside_modal
-    @view.native_app_mode = false
     @view.turbo_frame_header = "modal"
     builder = UltimateTurboModal::ActionBuilder.new(@view)
     assert_instance_of UltimateTurboModal::ModalActionRenderer, builder.renderer
   end
 
-  def test_submit_renders_nothing_when_visible_in_excludes_current_context
-    @view.native_app_mode = true
+  def test_selects_modal_renderer_outside_modal
     @view.turbo_frame_header = nil
-    result = @view.actions do |actions|
-      actions.submit("Save", form: "f", visible_in: [:browser_modal])
-    end
-    assert_equal "", result
-  end
-
-  def test_submit_renders_in_matching_context
-    @view.native_app_mode = true
-    @view.define_singleton_method(:native_sheet?) { true }
-    result = @view.actions do |actions|
-      actions.submit("Save", form: "f", primary: true, visible_in: [:native_sheet])
-    end
-    refute_equal "", result
-  end
-
-  def test_cancel_renders_nothing_when_visible_in_excludes_context
-    result = @view.actions do |actions|
-      actions.cancel("Cancel", "/cancel", visible_in: [:native_sheet])
-    end
-    assert_equal "", result
-  end
-
-  def test_button_renders_nothing_when_visible_in_excludes_context
-    @view.native_app_mode = true
-    @view.turbo_frame_header = nil
-    result = @view.actions do |actions|
-      actions.button("Delete", path: "/delete", visible_in: [:browser_modal])
-    end
-    assert_equal "", result
+    builder = UltimateTurboModal::ActionBuilder.new(@view)
+    assert_instance_of UltimateTurboModal::ModalActionRenderer, builder.renderer
   end
 
   def test_uses_configured_native_sheet_action_renderer
@@ -307,6 +256,7 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
       def cancel(*); end
       def submit(*); end
       def button(*); end
+      def overflow_menu(*); end
     end
 
     UltimateTurboModal.configure do |config|
@@ -369,20 +319,13 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     UltimateTurboModal.reset_configuration!
   end
 
-  def test_overflow_menu_is_ignored_by_inline_renderer
-    result = @view.actions do |actions|
-      actions.overflow_menu([{label: "Delete", path: "/delete"}])
-    end
-
-    assert_equal "", result
-  end
-
   def test_overflow_menu_is_ignored_by_modal_renderer
     @view.turbo_frame_header = "modal"
-    result = @view.actions do |actions|
+    @view.actions do |actions|
       actions.overflow_menu([{label: "Delete", path: "/delete"}])
     end
 
+    result = @view.render_captured_footer
     assert_equal "", result
   end
 
@@ -415,11 +358,24 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
   end
 
   def test_submit_form_is_optional
-    result = @view.actions do |actions|
+    @view.turbo_frame_header = "modal"
+    @view.actions do |actions|
       actions.submit("Save")
     end
 
+    result = @view.render_captured_footer
     assert_includes result, "Save"
     assert_includes result, "btn btn-primary"
+  end
+
+  def test_actions_outside_modal_or_sheet_raises
+    @view.reset_modal_component!
+    error = assert_raises(RuntimeError) do
+      @view.actions do |actions|
+        actions.button("New", path: "/new")
+      end
+    end
+
+    assert_includes error.message, "must be used inside a modal, drawer, or native sheet"
   end
 end

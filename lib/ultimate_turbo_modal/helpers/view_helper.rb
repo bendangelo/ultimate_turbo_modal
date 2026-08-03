@@ -34,11 +34,11 @@ module UltimateTurboModal::Helpers
 
       if native_sheet?
         builder.render
-      elsif @ultimate_turbo_modal_component && inside_modal?
+      elsif @ultimate_turbo_modal_component
         @ultimate_turbo_modal_component.actions(builder)
         ""
       else
-        builder.render
+        fail "<%= actions %> must be used inside a modal, drawer, or native sheet"
       end
     end
 

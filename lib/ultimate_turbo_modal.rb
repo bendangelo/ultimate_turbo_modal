@@ -3,7 +3,6 @@
 require_relative "ultimate_turbo_modal/version"
 require "phlex/deferred_render_with_main_content"
 require "ultimate_turbo_modal/native_sheet_config"
-require "ultimate_turbo_modal/helpers/native_action_renderer"
 require "ultimate_turbo_modal/helpers/inline_action_renderer"
 require "ultimate_turbo_modal/helpers/modal_action_renderer"
 require "ultimate_turbo_modal/helpers/action_builder"
