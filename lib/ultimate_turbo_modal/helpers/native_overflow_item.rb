@@ -8,7 +8,7 @@ module UltimateTurboModal
       def self.normalize(item)
         item = item.symbolize_keys
         {
-          key: item[:key].to_s,
+          key: item[:key]&.to_s.presence,
           label: item[:label],
           icon: item[:icon],
           path: item[:path] || item[:url],
