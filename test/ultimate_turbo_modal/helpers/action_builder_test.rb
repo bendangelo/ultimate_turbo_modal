@@ -231,6 +231,29 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     refute_includes result, "btn"
   end
 
+  def test_button_with_delete_method_renders_form_pointing_at_path
+    @view.turbo_frame_header = "modal"
+    @view.actions do |actions|
+      actions.button("Delete", path: "/things/1", method: :delete)
+    end
+
+    result = @view.render_captured_footer
+    assert_includes result, %(action="/things/1"), "form action must match the given path, not the current request URL"
+    assert_includes result, %(name="_method" value="delete"), "form must carry the _method override for DELETE"
+    assert_includes result, "Delete"
+  end
+
+  def test_button_with_post_method_renders_form_pointing_at_path
+    @view.turbo_frame_header = "modal"
+    @view.actions do |actions|
+      actions.button("Approve", path: "/things/1/approve", method: :post)
+    end
+
+    result = @view.render_captured_footer
+    assert_includes result, %(action="/things/1/approve"), "form action must match the given path, not the current request URL"
+    assert_includes result, "Approve"
+  end
+
   def test_selects_native_sheet_renderer_for_native_sheet
     @view.define_singleton_method(:native_sheet?) { true }
     builder = UltimateTurboModal::ActionBuilder.new(@view)

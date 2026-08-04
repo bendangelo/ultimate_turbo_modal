@@ -77,7 +77,7 @@ module UltimateTurboModal
     end
 
     def render_form_button(label, path, method:, **attrs)
-      form_attrs = {method: method.to_s, action: path, class: "inline"}
+      form_attrs = {method: method.to_s, url: path, class: "inline"}
       button_attrs = attrs.except(:form)
       @output.safe_concat(@view.form_with(**form_attrs) do
         @view.tag.button(label, **button_attrs)
