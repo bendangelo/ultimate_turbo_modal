@@ -34,11 +34,11 @@ module UltimateTurboModal::Helpers
 
       if native_sheet?
         builder.render
-      elsif @ultimate_turbo_modal_component
+      elsif @ultimate_turbo_modal_component && inside_modal?
         @ultimate_turbo_modal_component.actions(builder)
         ""
       else
-        builder.render_footer
+        builder.render
       end
     end
 

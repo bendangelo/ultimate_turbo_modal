@@ -243,10 +243,17 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_instance_of UltimateTurboModal::ModalActionRenderer, builder.renderer
   end
 
-  def test_selects_modal_renderer_outside_modal
+  def test_selects_inline_renderer_for_browser_full_page
     @view.turbo_frame_header = nil
     builder = UltimateTurboModal::ActionBuilder.new(@view)
-    assert_instance_of UltimateTurboModal::ModalActionRenderer, builder.renderer
+    assert_instance_of UltimateTurboModal::InlineActionRenderer, builder.renderer
+  end
+
+  def test_selects_split_renderer_for_native_full_page
+    @view.define_singleton_method(:hotwire_native_app?) { true }
+    @view.turbo_frame_header = nil
+    builder = UltimateTurboModal::ActionBuilder.new(@view)
+    assert_instance_of UltimateTurboModal::NativeSplitActionRenderer, builder.renderer
   end
 
   def test_uses_configured_native_sheet_action_renderer
