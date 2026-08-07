@@ -142,4 +142,50 @@ class UltimateTurboModalNativeSplitActionRendererTest < Minitest::Test
 
     assert_equal "", html
   end
+
+  def test_submit_primary_omits_label_when_native
+    @view.define_singleton_method(:hotwire_native_app?) { true }
+    @renderer.submit("Save", form: "f", primary: true)
+    html = rendered_html
+
+    assert_includes html, "data-controller=\"bridge--primary-action\""
+    payload = extract_payload(html, "bridge--primary-action")
+    refute payload.key?("label"), "label should be omitted on native"
+    assert_equal "check", payload["icon"]
+  end
+
+  def test_submit_primary_includes_label_when_not_native
+    @view.define_singleton_method(:hotwire_native_app?) { false }
+    @renderer.submit("Save", form: "f", primary: true)
+    html = rendered_html
+
+    payload = extract_payload(html, "bridge--primary-action")
+    assert_equal "Save", payload["label"]
+  end
+
+  def test_submit_with_custom_icon_on_native
+    @view.define_singleton_method(:hotwire_native_app?) { true }
+    @renderer.submit("Send", form: "f", primary: true, icon: "paper-plane")
+    html = rendered_html
+
+    payload = extract_payload(html, "bridge--primary-action")
+    refute payload.key?("label")
+    assert_equal "paper-plane", payload["icon"]
+  end
+
+  def test_button_primary_omits_label_when_native
+    @view.define_singleton_method(:hotwire_native_app?) { true }
+    @renderer.button("Navigate", path: "/x", method: :get, primary: true)
+    html = rendered_html
+
+    payload = extract_payload(html, "bridge--primary-action")
+    refute payload.key?("label"), "label should be omitted on native"
+  end
+
+  private
+
+  def extract_payload(html, controller_name)
+    json = html.match(/data-#{controller_name}-payload-value="([^"]+)"/)&.[](1)
+    JSON.parse(CGI.unescapeHTML(json || "{}"))
+  end
 end

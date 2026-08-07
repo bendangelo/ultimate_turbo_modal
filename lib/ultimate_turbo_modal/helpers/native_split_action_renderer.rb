@@ -57,10 +57,13 @@ module UltimateTurboModal
     end
 
     def emit_primary_action(item)
+      icon = item.delete(:icon) || DEFAULT_PRIMARY_ICON
+      label = item.delete(:label)
+
       payload = {
         key: item.delete(:key) || "primary",
-        label: item.delete(:label),
-        icon: item.delete(:icon) || DEFAULT_PRIMARY_ICON,
+        label: native_icon_only? ? nil : label,
+        icon: icon,
         path: item.delete(:path),
         method: item.delete(:method) || "get",
         bridge: item.delete(:bridge),
@@ -79,6 +82,10 @@ module UltimateTurboModal
       }
 
       @output.safe_concat(@view.tag.div("", **div_attrs, aria: { hidden: "true" }))
+    end
+
+    def native_icon_only?
+      @view.respond_to?(:hotwire_native_app?) && @view.hotwire_native_app?
     end
 
     def emit_overflow_menu
