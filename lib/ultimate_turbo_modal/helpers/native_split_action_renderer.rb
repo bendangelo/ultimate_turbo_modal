@@ -31,7 +31,11 @@ module UltimateTurboModal
           submit_value: html_attrs[:value]
         )
       )
-      primary ? emit_primary_action(item) : add_to_overflow(item, overflow)
+      if primary || !overflow
+        emit_primary_action(item)
+      else
+        add_to_overflow(item, overflow)
+      end
     end
 
     def button(label, path:, method: :get, primary: false, overflow: false, **html_attrs)

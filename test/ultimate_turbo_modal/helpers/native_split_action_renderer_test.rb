@@ -129,11 +129,21 @@ class UltimateTurboModalNativeSplitActionRendererTest < Minitest::Test
     assert_includes html, "true"
   end
 
-  def test_submit_without_primary_or_overflow_is_noop
-    @renderer.submit("Hidden", form: "f")
+  def test_submit_without_primary_or_overflow_defaults_to_primary
+    @renderer.submit("Save", form: "my-form")
     html = rendered_html
 
-    assert_equal "", html
+    assert_includes html, "data-controller=\"bridge--primary-action\""
+    assert_includes html, "my-form"
+    assert_includes html, "Save"
+  end
+
+  def test_submit_with_overflow_true_goes_to_overflow
+    @renderer.submit("Delete", form: "delete-form", overflow: true)
+    html = rendered_html
+
+    assert_includes html, "data-controller=\"bridge--overflow-menu\""
+    refute_includes html, "data-controller=\"bridge--primary-action\""
   end
 
   def test_button_without_primary_or_overflow_is_noop
