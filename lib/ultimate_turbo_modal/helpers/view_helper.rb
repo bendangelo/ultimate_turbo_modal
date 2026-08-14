@@ -4,9 +4,18 @@ module UltimateTurboModal::Helpers
   module ViewHelper
     def modal(title: nil, **options, &)
       if native_sheet?
+        cfg = UltimateTurboModal.configuration
+        padding = if options.key?(:padding)
+          options[:padding]
+        elsif options.key?(:drawer_position)
+          cfg.drawer_config.padding
+        else
+          cfg.modal_config.padding
+        end
         wrapper_locals = {
           title: title,
-          content_div_data: options[:content_div_data]
+          content_div_data: options[:content_div_data],
+          padding: padding
         }
         render(UltimateTurboModal.configuration.native_sheet_config.wrapper_partial, **wrapper_locals) do
           capture(&)

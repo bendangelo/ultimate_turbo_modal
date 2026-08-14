@@ -1,9 +1,11 @@
 <% extra_controllers = local_assigns[:content_div_data].is_a?(Hash) ? content_div_data[:controller].to_s : "" %>
 <% controller_attr = "native-sheet" %>
 <% controller_attr += " #{extra_controllers}" if extra_controllers.present? %>
+<% padding_classes = local_assigns[:padding] == false ? "" : "px-4 sm:px-6 pt-4 pb-6" %>
 <div data-native-sheet-content
      data-controller="<%= controller_attr %>"
      data-native-sheet-close-on-submit-success-value="true"
-     data-action="turbo:submit-end->native-sheet#submitEnd">
+     data-action="turbo:submit-end->native-sheet#submitEnd"
+     class="<%= padding_classes %>">
   <%= yield %>
 </div>
