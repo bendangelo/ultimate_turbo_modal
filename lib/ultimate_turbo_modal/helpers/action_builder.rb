@@ -37,28 +37,14 @@ module UltimateTurboModal
       @renderer.overflow_menu(items, icon: icon) if @renderer.respond_to?(:overflow_menu)
     end
 
-    def native_sheet?
-      @view.respond_to?(:native_sheet?) && @view.native_sheet?
-    end
-
     def inside_modal?
       @view.respond_to?(:inside_modal?) && @view.inside_modal?
-    end
-
-    def native_full_page?
-      hotwire_native_app? && !native_sheet?
-    end
-
-    def hotwire_native_app?
-      @view.respond_to?(:hotwire_native_app?) && @view.hotwire_native_app?
     end
 
     private
 
     def resolve_renderer
-      if native_sheet? || native_full_page?
-        @configuration.native_sheet_config.action_renderer.new(self)
-      elsif inside_modal?
+      if inside_modal?
         ModalActionRenderer.new(self)
       else
         InlineActionRenderer.new(self)

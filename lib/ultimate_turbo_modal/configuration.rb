@@ -14,9 +14,9 @@ module UltimateTurboModal
     :allowed_click_outside_selector, :allowed_click_outside_selector=, to: :configuration
 
   class Configuration
-    attr_reader :flavor, :modal_config, :drawer_config, :native_sheet_config
+    attr_reader :flavor, :modal_config, :drawer_config
     attr_accessor :allowed_click_outside_selector, :close_on_submit_success,
-      :native_app_detect, :primary_action_classes, :secondary_action_classes,
+      :primary_action_classes, :secondary_action_classes,
       :danger_action_classes
 
     def initialize
@@ -28,14 +28,6 @@ module UltimateTurboModal
       @danger_action_classes = nil
       @modal_config = ModalConfig.new
       @drawer_config = DrawerConfig.new
-      @native_sheet_config = NativeSheetConfig.new
-      @native_app_detect = ->(context) {
-        if context.respond_to?(:request)
-          headers = context.request.headers
-          return true if headers["X-Turbo-Native"].present?
-        end
-        false
-      }
     end
 
     def modal
@@ -46,11 +38,6 @@ module UltimateTurboModal
     def drawer
       yield(@drawer_config) if block_given?
       @drawer_config
-    end
-
-    def native_sheet
-      yield(@native_sheet_config) if block_given?
-      @native_sheet_config
     end
 
     def flavor=(flavor)

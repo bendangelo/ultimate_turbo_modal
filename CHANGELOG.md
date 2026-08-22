@@ -1,7 +1,12 @@
-## [Unreleased]
+## [4.0.0] - 2026-08-22
 
-- **Pluggable native-sheet action renderer.** `config.native_sheet.action_renderer` now controls which renderer `actions` uses inside native sheets. Defaults to `NativeActionRenderer` for backward compatibility.
-- **New `UltimateTurboModal::NativeHeaderActionRenderer`.** Emits `bridge--header` payloads for apps that use an atomic header bridge component instead of `bridge--button`.
+- **BREAKING**: Removed all Hotwire Native sheet support. The gem is now browser-only.
+  - Removed `NativeSheetConfig`, `NativeSplitActionRenderer`, `NativeOverflowItem`.
+  - Removed `native_sheet?`, `inside_native_sheet?`, `hotwire_native_app?` from `ControllerHelper` and `ViewHelper`.
+  - Removed `native_sheet_config` and `native_app_detect` from `Configuration`.
+  - Removed `_native_sheet_wrapper.html.erb` partial and `native_sheet_controller.js` Stimulus controller.
+  - Removed native controller copy step from install generator.
+- **Extension**: Apps can add native support by overriding `modal()`, `actions()`, and `dismiss_button()` in a helper module included after `UltimateTurboModal::Helpers::ViewHelper`. See the README for details.
 
 ## [3.3.0] - 2026-07-20
 

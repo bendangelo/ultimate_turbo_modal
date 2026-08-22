@@ -23,10 +23,6 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
       block.call(*args)
     end
 
-    def native_sheet?
-      false
-    end
-
     def request
       @request ||= Struct.new(:headers).new({"Turbo-Frame" => turbo_frame_header})
     end
@@ -91,31 +87,6 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "Save"
     assert_includes result, "btn btn-secondary"
     assert_includes result, "btn btn-primary"
-  end
-
-  def test_renders_native_split_actions_in_native_sheet
-    @view.define_singleton_method(:native_sheet?) { true }
-    result = @view.actions do |actions|
-      actions.button("Edit", path: "/edit", method: :get, primary: true)
-      actions.submit("Save", form: "my-form", primary: true)
-    end
-
-    assert_includes result, "data-controller=\"bridge--primary-action\""
-    assert_includes result, "data-bridge--primary-action-payload-value"
-    assert_includes result, "Edit"
-    assert_includes result, "/edit"
-    assert_includes result, "Save"
-    assert_includes result, "my-form"
-    refute_includes result, "Cancel"
-  end
-
-  def test_native_cancel_is_noop
-    @view.define_singleton_method(:native_sheet?) { true }
-    result = @view.actions do |actions|
-      actions.cancel("Close", "/somewhere")
-    end
-
-    assert_equal "", result
   end
 
   def test_modal_cancel_uses_path_and_button_tag
@@ -254,12 +225,6 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_includes result, "Approve"
   end
 
-  def test_selects_native_sheet_renderer_for_native_sheet
-    @view.define_singleton_method(:native_sheet?) { true }
-    builder = UltimateTurboModal::ActionBuilder.new(@view)
-    assert_instance_of UltimateTurboModal::NativeSplitActionRenderer, builder.renderer
-  end
-
   def test_selects_modal_renderer_inside_modal
     @view.turbo_frame_header = "modal"
     builder = UltimateTurboModal::ActionBuilder.new(@view)
@@ -272,83 +237,6 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
     assert_instance_of UltimateTurboModal::InlineActionRenderer, builder.renderer
   end
 
-  def test_selects_split_renderer_for_native_full_page
-    @view.define_singleton_method(:hotwire_native_app?) { true }
-    @view.turbo_frame_header = nil
-    builder = UltimateTurboModal::ActionBuilder.new(@view)
-    assert_instance_of UltimateTurboModal::NativeSplitActionRenderer, builder.renderer
-  end
-
-  def test_uses_configured_native_sheet_action_renderer
-    custom_renderer_class = Class.new do
-      def initialize(view); end
-      def render; "CUSTOM_RENDERER_OUTPUT"; end
-      def cancel(*); end
-      def submit(*); end
-      def button(*); end
-      def overflow_menu(*); end
-    end
-
-    UltimateTurboModal.configure do |config|
-      config.native_sheet do |native_sheet|
-        native_sheet.action_renderer = custom_renderer_class
-      end
-    end
-
-    @view.define_singleton_method(:native_sheet?) { true }
-    result = @view.actions do |actions|
-      actions.submit("Save", form: "my-form")
-    end
-
-    assert_equal "CUSTOM_RENDERER_OUTPUT", result
-  ensure
-    UltimateTurboModal.reset_configuration!
-  end
-
-  def test_submit_with_primary_true_in_native_sheet_uses_split_renderer
-    UltimateTurboModal.configure do |config|
-      config.native_sheet do |ns|
-        ns.action_renderer = UltimateTurboModal::NativeSplitActionRenderer
-      end
-    end
-
-    @view.define_singleton_method(:native_sheet?) { true }
-    result = @view.actions do |actions|
-      actions.submit("Save", form: "my-form", primary: true)
-    end
-
-    assert_includes result, "data-controller=\"bridge--primary-action\""
-    payload = result.match(/data-bridge--primary-action-payload-value="([^"]+)"/)
-    assert payload, "Expected bridge--primary-action payload"
-    parsed = JSON.parse(payload[1].gsub("&quot;", '"').gsub("&amp;", "&"))
-    assert_equal "Save", parsed["label"]
-    assert_equal "my-form", parsed["submit_form"]
-  ensure
-    UltimateTurboModal.reset_configuration!
-  end
-
-  def test_submit_with_overflow_true_in_native_sheet_emits_overflow_menu
-    UltimateTurboModal.configure do |config|
-      config.native_sheet do |ns|
-        ns.action_renderer = UltimateTurboModal::NativeSplitActionRenderer
-      end
-    end
-
-    @view.define_singleton_method(:native_sheet?) { true }
-    result = @view.actions do |actions|
-      actions.submit("Delete", form: "delete-form", overflow: true)
-    end
-
-    assert_includes result, "data-controller=\"bridge--overflow-menu\""
-    payload = result.match(/data-bridge--overflow-menu-payload-value="([^"]+)"/)
-    assert payload, "Expected bridge--overflow-menu payload"
-    parsed = JSON.parse(payload[1].gsub("&quot;", '"').gsub("&amp;", "&"))
-    assert_equal 1, parsed["items"].length
-    assert_equal "Delete", parsed["items"][0]["label"]
-  ensure
-    UltimateTurboModal.reset_configuration!
-  end
-
   def test_overflow_menu_is_ignored_by_modal_renderer
     @view.turbo_frame_header = "modal"
     @view.actions do |actions|
@@ -357,34 +245,6 @@ class UltimateTurboModalActionBuilderTest < Minitest::Test
 
     result = @view.render_captured_footer
     assert_equal "", result
-  end
-
-  def test_overflow_menu_works_with_native_split_renderer
-    UltimateTurboModal.configure do |config|
-      config.native_sheet do |ns|
-        ns.action_renderer = UltimateTurboModal::NativeSplitActionRenderer
-      end
-    end
-
-    @view.define_singleton_method(:native_sheet?) { true }
-    result = @view.actions do |actions|
-      actions.overflow_menu([
-        {label: "Edit", path: "/edit"},
-        {label: "Delete", path: "/delete", destructive: true}
-      ], icon: "dots-three-vertical")
-    end
-
-    assert_includes result, "data-controller=\"bridge--overflow-menu\""
-    payload = result.match(/data-bridge--overflow-menu-payload-value="([^"]+)"/)
-    assert payload, "Expected bridge--overflow-menu payload"
-    parsed = JSON.parse(payload[1].gsub("&quot;", '"').gsub("&amp;", "&"))
-    assert_equal "dots-three-vertical", parsed["icon"]
-    assert_equal 2, parsed["items"].length
-    assert_equal "Edit", parsed["items"][0]["label"]
-    assert_equal "Delete", parsed["items"][1]["label"]
-    assert parsed["items"][1]["destructive"]
-  ensure
-    UltimateTurboModal.reset_configuration!
   end
 
   def test_submit_form_is_optional

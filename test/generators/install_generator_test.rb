@@ -20,18 +20,17 @@ class InstallGeneratorTest < Rails::Generators::TestCase
     File.write(File.join(destination_root, "config/importmap.rb"), "pin \"application\"\n")
   end
 
-  test "install generator copies native modal frame and sheet controllers" do
+  test "install generator creates initializer, flavor, and turbo frame" do
     run_generator ["--flavor", "tailwind"]
 
-    assert_file "app/javascript/controllers/native_modal_frame_controller.js" do |content|
-      assert_includes content, "intercept(event)"
-      assert_includes content, "event.detail.fetchOptions"
-      assert_includes content, "window.Turbo?.visit(event.detail.url)"
+    assert_file "config/initializers/ultimate_turbo_modal.rb" do |content|
+      assert_includes content, ":tailwind"
     end
 
-    assert_file "app/javascript/controllers/native_sheet_controller.js" do |content|
-      assert_includes content, "dismiss()"
-      assert_includes content, "window.history.back()"
+    assert_file "config/initializers/ultimate_turbo_modal_tailwind.rb"
+
+    assert_file "app/views/layouts/application.html.erb" do |content|
+      assert_includes content, %(turbo_frame_tag "modal")
     end
   end
 end

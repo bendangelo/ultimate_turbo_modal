@@ -3,30 +3,11 @@
 module UltimateTurboModal::Helpers
   module ViewHelper
     def modal(title: nil, **options, &)
-      if native_sheet?
-        cfg = UltimateTurboModal.configuration
-        padding = if options.key?(:padding)
-          options[:padding]
-        elsif options.key?(:drawer_position)
-          cfg.drawer_config.padding
-        else
-          cfg.modal_config.padding
-        end
-        wrapper_locals = {
-          title: title,
-          content_div_data: options[:content_div_data],
-          padding: padding
-        }
-        render(UltimateTurboModal.configuration.native_sheet_config.wrapper_partial, **wrapper_locals) do
-          capture(&)
-        end
-      else
-        @ultimate_turbo_modal_component = UltimateTurboModal.new(request:, title: title, **options)
-        begin
-          render(@ultimate_turbo_modal_component, &)
-        ensure
-          @ultimate_turbo_modal_component = nil
-        end
+      @ultimate_turbo_modal_component = UltimateTurboModal.new(request:, title: title, **options)
+      begin
+        render(@ultimate_turbo_modal_component, &)
+      ensure
+        @ultimate_turbo_modal_component = nil
       end
     end
 
@@ -41,9 +22,7 @@ module UltimateTurboModal::Helpers
       builder = UltimateTurboModal::ActionBuilder.new(self)
       capture(builder, &block)
 
-      if native_sheet?
-        builder.render
-      elsif @ultimate_turbo_modal_component && inside_modal?
+      if @ultimate_turbo_modal_component && inside_modal?
         @ultimate_turbo_modal_component.actions(builder)
         ""
       else
@@ -51,17 +30,8 @@ module UltimateTurboModal::Helpers
       end
     end
 
-    def native_sheet?
-      UltimateTurboModal.configuration.native_sheet_config.detect.call(self)
-    end
-
-    def inside_native_sheet?
-      native_sheet?
-    end
-
     def dismiss_button(label = nil, **html_attrs, &block)
-      action = native_sheet? ? "click->native-sheet#dismiss" : "click->modal#hide"
-      html_attrs[:data] = (html_attrs[:data] || {}).merge(action: action)
+      html_attrs[:data] = (html_attrs[:data] || {}).merge(action: "click->modal#hide")
       if block
         tag.button(type: "button", **html_attrs, &block)
       else

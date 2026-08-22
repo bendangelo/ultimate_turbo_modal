@@ -193,61 +193,63 @@ Link to it the same way as a modal:
 <% end %>
 ```
 
-### Native sheet action renderer
+### Hotwire Native / Mobile
 
-By default, `actions` inside a native sheet renders `bridge--primary-action` and
-`bridge--overflow-menu` bridge components using
-`UltimateTurboModal::NativeSplitActionRenderer`. This is the recommended renderer
-for Hotwire Native apps.
-
-The primary action is emitted as a `bridge--primary-action` element:
-
-```html
-<div data-controller="bridge--primary-action"
-     data-bridge--primary-action-payload-value='{"key":"primary","label":"Save","icon":"check","submit_form":"edit-form"}'
-     aria-hidden="true">
-</div>
-```
-
-Overflow items are collected into a single `bridge--overflow-menu` element:
-
-```html
-<div data-controller="bridge--overflow-menu"
-     data-bridge--overflow-menu-payload-value='{"icon":"dots-three-vertical","items":[{"key":"delete","label":"Delete","method":"delete","destructive":true}]}'
-     aria-hidden="true">
-</div>
-```
-
-Usage in views:
-
-```erb
-<%= actions do |a| %>
-  <% a.cancel "Cancel" %>
-  <% a.submit "Save", form: "edit-form", primary: true %>
-  <% a.submit "Save & Add Another", form: "edit-form", overflow: true %>
-  <% a.button "Delete", path: item_path, method: :delete, overflow: true, danger: true %>
-  <% a.overflow_menu(extra_actions, icon: "dots-three-vertical") %>
-<% end %>
-```
-
-- `primary: true` — renders a `bridge--primary-action` (one per view)
-- `overflow: true` — adds the action to the `bridge--overflow-menu`
-- `overflow_menu(items, icon:)` — adds explicit items to the overflow menu
-- `cancel` is a no-op in native context (the SDK's close button handles dismiss)
-
-If your native app uses per-button `bridge--button` elements instead, you can
-switch to the legacy renderer:
+UTMR 4.0+ is browser-only. To add Hotwire Native support (native sheets,
+full-page rendering, bridge component actions), override `modal()`,
+`actions()`, and `dismiss_button()` in a helper module included **after**
+`UltimateTurboModal::Helpers::ViewHelper`:
 
 ```ruby
-UltimateTurboModal.configure do |config|
-  config.native_sheet do |native_sheet|
-    native_sheet.action_renderer = UltimateTurboModal::NativeActionRenderer
+module NativeModalOverrideHelper
+  def modal(title: nil, **options, &)
+    if native_full_page?
+      # Render bare page content — no <dialog>
+      tag.div(class: "page-container") { capture(&) }
+    elsif inside_native_sheet?
+      # Render bare sheet wrapper — no <dialog>
+      render("native_sheet_wrapper") { capture(&) }
+    else
+      super # Web: delegate to gem
+    end
+  end
+
+  def actions(&block)
+    if native_full_page? || inside_native_sheet?
+      # Use your own bridge component renderer
+      builder = UltimateTurboModal::ActionBuilder.new(self)
+      builder.instance_variable_set(:@renderer, MyNativeRenderer.new(builder))
+      capture(builder, &block)
+      builder.render
+    else
+      super # Web: delegate to gem
+    end
+  end
+
+  def dismiss_button(label = nil, **html_attrs, &block)
+    if inside_native_sheet?
+      html_attrs[:onclick] = "history.back()"
+    else
+      super # Web: delegate to gem
+    end
   end
 end
 ```
 
-You can also provide your own renderer class; it must implement
-`initialize(builder)`, `render`, `cancel`, `submit`, and `button`.
+Include it in your `ApplicationHelper` after the gem's `ViewHelper`:
+
+```ruby
+module ApplicationHelper
+  include UltimateTurboModal::Helpers::ViewHelper
+  include NativeModalOverrideHelper # Must be AFTER ViewHelper
+end
+```
+
+Your app is responsible for:
+- Detecting native context (`hotwire_native_app?`, `inside_native_sheet?`, `native_full_page?`)
+- Rendering the native sheet wrapper partial
+- Providing an action renderer that emits bridge component divs
+- Handling `dismiss_button` behavior in native sheet context
 
 ### Drawer Size Reference
 
